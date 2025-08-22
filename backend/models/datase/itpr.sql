@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Aug 20, 2025 at 07:11 AM
+-- Generation Time: Aug 22, 2025 at 10:31 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -145,8 +145,33 @@ INSERT INTO `approvalworkflow` (`approvalworkflow_id`, `plan_id`, `approver_id`,
 (299, 133, 72, 'Pending', '', '2025-04-11 06:40:25', NULL, NULL, 'Pending', NULL, ''),
 (300, 134, 72, 'Pending', '', '2025-04-11 06:40:25', NULL, NULL, 'Pending', NULL, ''),
 (301, 146, 72, 'Approved', 'good', '2025-08-14 02:38:38', NULL, NULL, 'Pending', NULL, ''),
-(302, 147, 72, 'Pending', NULL, '2025-08-14 02:46:17', NULL, NULL, 'Pending', NULL, ''),
-(303, 148, 72, 'Pending', NULL, '2025-08-14 03:10:27', NULL, NULL, 'Pending', NULL, '');
+(302, 147, 72, 'Approved', 'ok', '2025-08-20 09:12:29', NULL, NULL, 'Pending', NULL, ''),
+(303, 148, 72, 'Approved', 'good', '2025-08-20 08:38:49', NULL, NULL, 'Pending', NULL, ''),
+(304, 146, 72, 'Pending', NULL, NULL, NULL, NULL, 'Pending', NULL, ''),
+(305, 148, 72, 'Approved', 'good', '2025-08-20 08:38:49', NULL, NULL, 'Pending', NULL, '');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `approval_workflow_history`
+--
+
+CREATE TABLE `approval_workflow_history` (
+  `history_id` int(11) NOT NULL,
+  `plan_id` int(11) NOT NULL,
+  `approver_id` int(11) NOT NULL,
+  `approver_name` varchar(255) NOT NULL,
+  `approver_role` varchar(100) NOT NULL,
+  `status` enum('Pending','Approved','Declined') NOT NULL,
+  `comment` text DEFAULT NULL,
+  `action_date` datetime DEFAULT current_timestamp(),
+  `step_number` int(11) NOT NULL,
+  `is_current_step` tinyint(1) DEFAULT 0,
+  `created_by_user_id` int(11) NOT NULL,
+  `created_by_name` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -498,26 +523,26 @@ CREATE TABLE `plans` (
 --
 
 INSERT INTO `plans` (`plan_id`, `user_id`, `department_id`, `supervisor_id`, `employee_id`, `goal_id`, `objective_id`, `specific_objective_id`, `specific_objective_detail_id`, `status`, `year`, `created_at`, `updated_at`, `report_status`, `department_name`, `editing_status`, `reporting`, `report_progress`) VALUES
-(129, 38, 2, 106, 107, 87, 113, 461, 683, 'Pending', 0, '2025-04-11 11:23:32', '2025-04-11 13:40:24', 'Pending', '', 'deactivate', 'active', NULL),
-(130, 38, 2, 106, 107, 87, 113, 462, 684, 'Pending', 0, '2025-04-11 11:37:44', '2025-04-11 13:40:24', 'Pending', '', 'deactivate', 'active', NULL),
-(131, 38, 2, 106, 107, 87, 113, 463, 685, 'Pending', 0, '2025-04-11 11:44:21', '2025-04-11 13:40:24', 'Pending', '', 'deactivate', 'active', NULL),
-(132, 38, 2, 106, 107, 87, 114, 465, 686, 'Pending', 0, '2025-04-11 12:08:26', '2025-04-14 12:16:45', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(133, 38, 2, 106, 107, 87, 114, 466, 687, 'Pending', 0, '2025-04-11 12:10:59', '2025-04-14 12:26:03', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(134, 38, 2, 106, 107, 88, 115, 467, 688, 'Pending', 0, '2025-04-11 12:14:44', '2025-04-11 18:00:01', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(135, 38, 2, 106, 107, 88, 116, 474, 689, 'Pending', 0, '2025-04-11 12:24:27', '2025-04-14 12:33:01', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(136, 38, 2, 106, 107, 88, 116, 475, 690, 'Pending', 0, '2025-04-11 12:32:16', '2025-04-14 12:33:43', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(137, 38, 2, 106, 107, 88, 117, 477, 691, 'Pending', 0, '2025-04-11 12:35:46', '2025-04-14 12:34:17', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(138, 38, 2, 106, 107, 88, 117, 478, 692, 'Pending', 0, '2025-04-11 12:37:28', '2025-04-14 12:36:13', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(139, 38, 2, 106, 107, 88, 117, 479, 693, 'Pending', 0, '2025-04-11 12:40:24', '2025-04-14 12:41:14', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(140, 38, 2, 106, 107, 88, 115, 468, 694, 'Pending', 0, '2025-04-11 12:42:50', '2025-04-14 12:43:28', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(141, 38, 2, 106, 107, 88, 115, 469, 695, 'Pending', 0, '2025-04-11 12:44:29', '2025-04-14 12:50:28', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(142, 38, 2, 106, 107, 88, 115, 470, 696, 'Pending', 0, '2025-04-11 12:47:10', '2025-04-14 12:59:00', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(143, 38, 2, 106, 107, 88, 115, 471, 697, 'Pending', 0, '2025-04-11 12:49:44', '2025-04-11 13:40:24', 'Pending', '', 'deactivate', 'active', NULL),
-(144, 38, 2, 106, 107, 88, 115, 472, 698, 'Pending', 0, '2025-04-11 12:51:17', '2025-04-14 13:38:56', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(145, 38, 2, 106, 107, 88, 115, 473, 699, 'Pending', 0, '2025-04-11 12:55:13', '2025-04-14 13:50:05', 'Pending', '', 'deactivate', 'active', 'on_progress'),
-(146, 24, 2, 72, 71, 91, 137, 596, 700, 'Pending', 0, '2025-08-13 13:13:52', '2025-08-13 17:38:38', 'Pending', '', 'deactivate', 'active', NULL),
-(147, 24, 2, 72, 71, 87, 113, 461, 701, 'Pending', 0, '2025-08-13 17:46:17', '2025-08-13 17:46:17', 'Pending', '', 'deactivate', 'deactivate', NULL),
-(148, 24, 2, 72, 71, 91, 136, 589, 702, 'Pending', 0, '2025-08-13 18:10:27', '2025-08-13 18:10:27', 'Pending', '', 'deactivate', 'deactivate', NULL);
+(129, 38, 2, 106, 107, 87, 113, 461, 683, 'Pending', 0, '2025-04-11 11:23:32', '2025-08-20 12:25:37', 'Pending', '', 'deactivate', 'deactivate', NULL),
+(130, 38, 2, 106, 107, 87, 113, 462, 684, 'Pending', 0, '2025-04-11 11:37:44', '2025-08-20 12:25:37', 'Pending', '', 'deactivate', 'deactivate', NULL),
+(131, 38, 2, 106, 107, 87, 113, 463, 685, 'Pending', 0, '2025-04-11 11:44:21', '2025-08-20 12:25:37', 'Pending', '', 'deactivate', 'deactivate', NULL),
+(132, 38, 2, 106, 107, 87, 114, 465, 686, 'Pending', 0, '2025-04-11 12:08:26', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(133, 38, 2, 106, 107, 87, 114, 466, 687, 'Pending', 0, '2025-04-11 12:10:59', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(134, 38, 2, 106, 107, 88, 115, 467, 688, 'Pending', 0, '2025-04-11 12:14:44', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(135, 38, 2, 106, 107, 88, 116, 474, 689, 'Pending', 0, '2025-04-11 12:24:27', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(136, 38, 2, 106, 107, 88, 116, 475, 690, 'Pending', 0, '2025-04-11 12:32:16', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(137, 38, 2, 106, 107, 88, 117, 477, 691, 'Pending', 0, '2025-04-11 12:35:46', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(138, 38, 2, 106, 107, 88, 117, 478, 692, 'Pending', 0, '2025-04-11 12:37:28', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(139, 38, 2, 106, 107, 88, 117, 479, 693, 'Pending', 0, '2025-04-11 12:40:24', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(140, 38, 2, 106, 107, 88, 115, 468, 694, 'Pending', 0, '2025-04-11 12:42:50', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(141, 38, 2, 106, 107, 88, 115, 469, 695, 'Pending', 0, '2025-04-11 12:44:29', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(142, 38, 2, 106, 107, 88, 115, 470, 696, 'Pending', 0, '2025-04-11 12:47:10', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(143, 38, 2, 106, 107, 88, 115, 471, 697, 'Pending', 0, '2025-04-11 12:49:44', '2025-08-20 12:25:37', 'Pending', '', 'deactivate', 'deactivate', NULL),
+(144, 38, 2, 106, 107, 88, 115, 472, 698, 'Pending', 0, '2025-04-11 12:51:17', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(145, 38, 2, 106, 107, 88, 115, 473, 699, 'Pending', 0, '2025-04-11 12:55:13', '2025-08-20 12:03:25', 'Pending', '', 'deactivate', 'deactivate', 'on_progress'),
+(146, 24, 2, 72, 71, 91, 137, 596, 700, 'Pending', 0, '2025-08-13 13:13:52', '2025-08-20 12:25:37', 'Pending', '', 'deactivate', 'deactivate', NULL),
+(147, 24, 2, 72, 71, 87, 113, 461, 701, 'Pending', 0, '2025-08-13 17:46:17', '2025-08-20 13:12:30', 'Pending', '', 'deactivate', 'active', NULL),
+(148, 24, 2, 72, 71, 91, 136, 589, 702, 'Pending', 0, '2025-08-13 18:10:27', '2025-08-20 12:38:49', 'Pending', '', 'deactivate', 'active', NULL);
 
 -- --------------------------------------------------------
 
@@ -650,37 +675,6 @@ INSERT INTO `role_permissions` (`id`, `role_id`, `menu_item_id`, `can_view`, `ca
 (306, 2, 56, 1, 1, 1, 1, '2025-08-18 14:05:15', '2025-08-18 14:05:15'),
 (307, 1, 67, 1, 1, 1, 1, '2025-08-18 17:58:59', '2025-08-18 17:58:59'),
 (308, 1, 68, 1, 1, 1, 1, '2025-08-19 06:44:14', '2025-08-19 06:44:14');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `approval_workflow_history`
---
-
-CREATE TABLE `approval_workflow_history` (
-  `history_id` int(11) NOT NULL AUTO_INCREMENT,
-  `plan_id` int(11) NOT NULL,
-  `approver_id` int(11) NOT NULL,
-  `approver_name` varchar(255) NOT NULL,
-  `approver_role` varchar(100) NOT NULL,
-  `status` enum('Pending','Approved','Declined') NOT NULL,
-  `comment` text DEFAULT NULL,
-  `action_date` datetime DEFAULT current_timestamp(),
-  `step_number` int(11) NOT NULL,
-  `is_current_step` tinyint(1) DEFAULT 0,
-  `created_by_user_id` int(11) NOT NULL,
-  `created_by_name` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`history_id`),
-  KEY `idx_plan_id` (`plan_id`),
-  KEY `idx_approver_id` (`approver_id`),
-  KEY `idx_created_by_user_id` (`created_by_user_id`),
-  KEY `idx_step_number` (`step_number`),
-  FOREIGN KEY (`plan_id`) REFERENCES `plans` (`plan_id`) ON DELETE CASCADE,
-  FOREIGN KEY (`approver_id`) REFERENCES `employees` (`employee_id`) ON DELETE CASCADE,
-  FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -929,7 +923,12 @@ INSERT INTO `specific_objective_details` (`specific_objective_detail_id`, `user_
 (701, 24, 'yesra edl fetera', 'ok', '0', '100', 'present', NULL, '2025-08-13 17:45:20', '2025-08-13 17:45:20', 2017, 6, 8, '2025-08-30', 'Pending', '', 2, '', '', 0, NULL, 'started', 'admin', 461, 'hr', NULL, NULL, 'full_time', NULL, NULL, NULL, 0.00, 200.00, NULL, NULL, 'deactivate', 'deactivate', 87),
 (702, 24, 'bonus', 'bonus cost plan', '0', '1000000', 'ETB', NULL, '2025-08-13 18:10:14', '2025-08-13 18:10:14', 2017, 6, 1, '2025-08-15', 'Pending', '', 2, '', '', 0, NULL, 'started', 'admin', 589, 'cost', NULL, 'regular_budget', NULL, NULL, 'Bonus', NULL, 0.00, 100.00, NULL, NULL, 'deactivate', 'deactivate', 91),
 (703, 24, 'yebet kiray', 'ok', '0', '100000', 'ETB', NULL, '2025-08-19 14:05:00', '2025-08-19 14:05:00', 2025, 1, 2, '2025-08-30', 'Pending', 'አስፈላጊ', 2, 'yebet kiray', 'ok', 1, NULL, 'started', 'admin', 475, 'cost', NULL, 'regular_budget', NULL, NULL, 'Daily Labourers Fee', NULL, 0.00, 100.00, NULL, NULL, 'deactivate', 'deactivate', 88),
-(704, 24, 'yebet kiray', 'ok', '0', '100000', 'present', NULL, '2025-08-19 15:43:27', '2025-08-19 15:43:27', 2021, 5, 3, '2025-08-30', 'Pending', 'በጣም አስፈላጊ', 2, 'yebet kiray', 'ok', 1, NULL, 'started', 'admin', 488, 'income', 'etb', NULL, NULL, NULL, NULL, NULL, 0.00, 100.00, NULL, NULL, 'deactivate', 'deactivate', 89);
+(704, 24, 'yebet kiray', 'ok', '0', '100000', 'present', NULL, '2025-08-19 15:43:27', '2025-08-19 15:43:27', 2021, 5, 3, '2025-08-30', 'Pending', 'በጣም አስፈላጊ', 2, 'yebet kiray', 'ok', 1, NULL, 'started', 'admin', 488, 'income', 'etb', NULL, NULL, NULL, NULL, NULL, 0.00, 100.00, NULL, NULL, 'deactivate', 'deactivate', 89),
+(705, 24, 'yebet kiray', 'nothing', '0', '100', 'present', NULL, '2025-08-20 11:36:47', '2025-08-20 11:36:47', 2018, 2, 1, '2025-08-30', 'Pending', 'በጣም አስፈላጊ', 2, 'yebet kiray', 'nothing', 1, NULL, 'started', 'admin', 475, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, NULL, NULL, 'deactivate', 'deactivate', 88),
+(706, 24, 'test', 'ok', '0', '98', 'present', NULL, '2025-08-20 11:42:50', '2025-08-20 11:42:50', 2018, 10, 21, '2025-08-30', 'Pending', 'አስፈላጊ', 2, 'test', 'ok', 1, NULL, 'started', 'admin', 475, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, NULL, NULL, 'deactivate', 'deactivate', 88),
+(707, 24, 'yebet kiray', 'ok', '0', '100', 'present', NULL, '2025-08-20 12:10:17', '2025-08-20 12:10:17', 2021, 8, 21, '2025-08-30', 'Pending', 'በጣም አስፈላጊ', 2, 'yebet kiray', 'ok', 1, NULL, 'started', 'admin', 475, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, NULL, NULL, 'deactivate', 'deactivate', 88),
+(708, 24, 'ok', 'ok', '9', '98', 'present', NULL, '2025-08-20 12:37:23', '2025-08-20 12:37:23', 2021, 5, 12, '2025-08-23', 'Pending', 'አስፈላጊ', 2, 'ok', 'ok', 1, NULL, 'started', 'admin', 475, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, NULL, NULL, 'deactivate', 'deactivate', 88),
+(709, 24, 'test', 'ok', '12', '123', 'present', NULL, '2025-08-20 13:09:40', '2025-08-20 13:09:40', 2017, 3, 21, '2025-08-30', 'Pending', 'አስፈላጊ', 2, 'test', 'ok', 1, NULL, 'started', 'admin', 478, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, NULL, NULL, 'deactivate', 'deactivate', 88);
 
 -- --------------------------------------------------------
 
@@ -1015,6 +1014,16 @@ ALTER TABLE `approvalworkflow`
   ADD PRIMARY KEY (`approvalworkflow_id`),
   ADD KEY `plan_id` (`plan_id`),
   ADD KEY `approver_id` (`approver_id`);
+
+--
+-- Indexes for table `approval_workflow_history`
+--
+ALTER TABLE `approval_workflow_history`
+  ADD PRIMARY KEY (`history_id`),
+  ADD KEY `idx_plan_id` (`plan_id`),
+  ADD KEY `idx_approver_id` (`approver_id`),
+  ADD KEY `idx_created_by_user_id` (`created_by_user_id`),
+  ADD KEY `idx_step_number` (`step_number`);
 
 --
 -- Indexes for table `conversations`
@@ -1159,7 +1168,13 @@ ALTER TABLE `approvalhierarchy`
 -- AUTO_INCREMENT for table `approvalworkflow`
 --
 ALTER TABLE `approvalworkflow`
-  MODIFY `approvalworkflow_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=304;
+  MODIFY `approvalworkflow_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=306;
+
+--
+-- AUTO_INCREMENT for table `approval_workflow_history`
+--
+ALTER TABLE `approval_workflow_history`
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `conversations`
@@ -1243,7 +1258,7 @@ ALTER TABLE `specific_objectives`
 -- AUTO_INCREMENT for table `specific_objective_details`
 --
 ALTER TABLE `specific_objective_details`
-  MODIFY `specific_objective_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=705;
+  MODIFY `specific_objective_detail_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=710;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -1268,6 +1283,14 @@ ALTER TABLE `approvalhierarchy`
 ALTER TABLE `approvalworkflow`
   ADD CONSTRAINT `approvalworkflow_ibfk_1` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`plan_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `approvalworkflow_ibfk_3` FOREIGN KEY (`approver_id`) REFERENCES `employees` (`employee_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `approval_workflow_history`
+--
+ALTER TABLE `approval_workflow_history`
+  ADD CONSTRAINT `approval_workflow_history_ibfk_1` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`plan_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `approval_workflow_history_ibfk_2` FOREIGN KEY (`approver_id`) REFERENCES `employees` (`employee_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `approval_workflow_history_ibfk_3` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `employees`
