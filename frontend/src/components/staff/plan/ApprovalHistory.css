@@ -1,0 +1,398 @@
+/* Approval History Styles */
+.approval-history-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.approval-history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.approval-history-error {
+  margin: 20px 0;
+}
+
+.no-plans, .no-history {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 40px;
+}
+
+/* Plans Grid */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.plan-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: box-shadow 0.2s ease;
+}
+
+.plan-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.plan-title {
+  font-size: 1.2em;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.plan-date {
+  color: #666;
+  font-size: 0.9em;
+  margin: 0;
+}
+
+.plan-details {
+  margin-bottom: 16px;
+}
+
+.plan-details p {
+  margin: 4px 0;
+  font-size: 0.9em;
+}
+
+/* Approval Summary */
+.approval-summary {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.approval-summary h4 {
+  margin: 0 0 12px 0;
+  font-size: 1em;
+  color: #333;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.stat.approved {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.stat.declined {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.current-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.view-history-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.view-history-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Detailed History Card */
+.detailed-history-card {
+  margin-top: 30px;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: #f0f0f0;
+}
+
+/* Timeline Styles */
+.approval-history-timeline {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 60px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 30px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e0e0e0;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -60px;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.marker-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 3px solid;
+  background-color: white;
+}
+
+.step-number {
+  margin-top: 8px;
+  font-size: 0.8em;
+  font-weight: 500;
+  color: #666;
+  text-align: center;
+}
+
+.timeline-content {
+  margin-left: 20px;
+}
+
+.approval-step-card {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.approver-name {
+  font-size: 1.1em;
+  margin: 0;
+  color: #333;
+}
+
+.approver-role {
+  background-color: #f8f9fa;
+  color: #495057;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.step-details p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.action-date {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.comment {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #007bff;
+  margin: 12px 0;
+}
+
+.current-step-indicator {
+  margin-top: 12px;
+}
+
+.current-badge {
+  background-color: #007bff;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Status Icons and Colors */
+.status-icon {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.status-icon.approved {
+  color: #28a745;
+}
+
+.status-icon.declined {
+  color: #dc3545;
+}
+
+.status-icon.pending {
+  color: #ffc107;
+}
+
+/* Status Classes */
+.status-approved {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+.status-approved .marker-icon {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.status-approved .status-badge {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-declined {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.status-declined .marker-icon {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.status-declined .status-badge {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-pending {
+  color: #ffc107;
+  border-color: #ffc107;
+}
+
+.status-pending .marker-icon {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+}
+
+.status-pending .status-badge {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .approval-history-container {
+    padding: 10px;
+  }
+  
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .timeline {
+    padding-left: 40px;
+  }
+  
+  .timeline-marker {
+    left: -40px;
+  }
+  
+  .marker-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9em;
+  }
+  
+  .step-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .summary-stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

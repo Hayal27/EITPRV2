@@ -1,0 +1,288 @@
+/* Plan Approval History Page Styles */
+.plan-approval-history-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px 0;
+}
+
+.page-header h1 {
+  font-size: 2.5em;
+  color: #333;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.page-header p {
+  font-size: 1.1em;
+  color: #666;
+  margin: 0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* View Mode Selector */
+.view-mode-selector {
+  margin-bottom: 30px;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  padding: 12px 24px;
+  border: 2px solid #007bff;
+  background-color: white;
+  color: #007bff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.mode-btn.active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Specific Plan Form */
+.specific-plan-form {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.input-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-group input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+  transition: border-color 0.2s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.search-btn {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  background-color: #218838;
+}
+
+/* History Content */
+.history-content {
+  margin-bottom: 40px;
+}
+
+/* Help Section */
+.help-section {
+  margin-top: 40px;
+}
+
+.status-guide {
+  margin-bottom: 30px;
+}
+
+.status-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #e0e0e0;
+}
+
+.status-item .status-icon {
+  font-size: 1.5em;
+  font-weight: bold;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-item .status-icon.approved {
+  color: #28a745;
+  background-color: #d4edda;
+  border: 2px solid #28a745;
+}
+
+.status-item .status-icon.pending {
+  color: #ffc107;
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+}
+
+.status-item .status-icon.declined {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 2px solid #dc3545;
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-info strong {
+  display: block;
+  font-size: 1.1em;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.status-info p {
+  margin: 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Approval Flow Info */
+.approval-flow-info {
+  background-color: #e7f3ff;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.approval-flow-info h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 1.2em;
+}
+
+.approval-flow-info p {
+  margin: 0 0 16px 0;
+  color: #555;
+  line-height: 1.6;
+}
+
+.approval-flow-info ol {
+  margin: 16px 0;
+  padding-left: 20px;
+}
+
+.approval-flow-info li {
+  margin-bottom: 8px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.approval-flow-info li strong {
+  color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .plan-approval-history-page {
+    padding: 10px;
+  }
+  
+  .page-header h1 {
+    font-size: 2em;
+  }
+  
+  .page-header p {
+    font-size: 1em;
+  }
+  
+  .mode-buttons {
+    flex-direction: column;
+  }
+  
+  .mode-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .input-group input {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .search-btn {
+    width: 100%;
+  }
+  
+  .status-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .status-item .status-icon {
+    align-self: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 1.8em;
+  }
+  
+  .approval-flow-info {
+    padding: 16px;
+  }
+  
+  .approval-flow-info ol {
+    padding-left: 16px;
+  }
+}

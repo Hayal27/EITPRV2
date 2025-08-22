@@ -1,0 +1,47 @@
+/* Professional Plan Steps - Global Overrides */
+.container.mt-46 {
+  margin-left: 0 !important;
+  padding: 0 !important;
+  max-width: none !important;
+}
+
+/* Ensure Bootstrap doesn't interfere */
+.mt-46 .container {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: none !important;
+}
+
+/* Professional Typography */
+.mt-46 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
+}
+
+/* Button Visibility Fix - Global Override */
+.mt-46 button,
+.mt-46 .btn,
+.mt-46 input[type="button"],
+.mt-46 input[type="submit"] {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* Ensure d-grid works properly */
+.mt-46 .d-grid {
+  display: grid !important;
+}
+
+.mt-46 .d-grid .btn {
+  width: 100% !important;
+}
+body {
+  font-size: 0.8em; /* 80% of the parent (usually html) */
+}
+
+* {
+  font-size: inherit; /* Make sure all elements follow body size */
+}
