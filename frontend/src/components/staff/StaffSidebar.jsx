@@ -14,6 +14,9 @@ function StaffSidebar({ onSidebarToggle }) {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
 
+    // Save sidebar state to localStorage
+    localStorage.setItem('staffSidebarCollapsed', JSON.stringify(newCollapsedState));
+
     // Close all submenus when collapsing
     if (newCollapsedState) {
       setActiveSubmenu(null);
@@ -91,11 +94,30 @@ function StaffSidebar({ onSidebarToggle }) {
     }
   ];
 
-  // Auto-collapse on mobile
+  // Load initial sidebar state and handle resize
   useEffect(() => {
+    // Load saved sidebar state from localStorage
+    const savedSidebarState = localStorage.getItem('staffSidebarCollapsed');
+    if (savedSidebarState !== null) {
+      const isCollapsedFromStorage = JSON.parse(savedSidebarState);
+      setIsCollapsed(isCollapsedFromStorage);
+      
+      // Dispatch initial state event
+      const sidebarEvent = new CustomEvent('staffSidebarStateChange', {
+        detail: {
+          isCollapsed: isCollapsedFromStorage,
+          sidebarWidth: isCollapsedFromStorage ? 60 : 260,
+          mainContentMargin: isCollapsedFromStorage ? 60 : 260,
+          timestamp: Date.now()
+        }
+      });
+      window.dispatchEvent(sidebarEvent);
+    }
+
     const handleResize = () => {
       if (window.innerWidth <= 768) {
         setIsCollapsed(true);
+        localStorage.setItem('staffSidebarCollapsed', JSON.stringify(true));
         if (onSidebarToggle) {
           onSidebarToggle({
             isCollapsed: true,

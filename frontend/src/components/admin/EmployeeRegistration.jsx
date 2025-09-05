@@ -1,6 +1,5 @@
 import Axios from "axios";
 import React, { useEffect, useState } from "react";
-import './AdminComponents.css';
 
 const EmployeeRegistration = () => {
   // State for roles, departments, supervisors, success message, error message, and form data

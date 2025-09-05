@@ -1,6 +1,5 @@
 import Axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import './AdminComponents.css';
 
 const UserTable = () => {
   // State for users, roles, departments, and supervisors

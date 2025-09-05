@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import Axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
@@ -45,9 +44,7 @@ import PlansTable from "./PlansTable";
 import Pagination from "./Pagination";
 import sad from "../../../assets/img/sad.gif";
 import happy from "../../../assets/img/happy.gif";
-import "../../../assets/css/planform.css";
-import "./StaffViewPlan.css";
-import "./ModernStaffViewPlan.css";
+import ApprovalHistory from "./ApprovalHistory";
 
 // Utility functions
 const calculateExecutionPercentage = (baseline, plan, outcome) => {
@@ -68,10 +65,10 @@ const CIcalculateExecutionPercentage = (CIbaseline, CIplan, CIoutcome) => {
 
 const renderFileIcon = (fileName) => {
   const ext = fileName.split('.').pop().toLowerCase();
-  if(ext === 'pdf') return <FontAwesomeIcon icon={faFilePdf} className="file-attachment-icon pdf-icon" />;
-  if(ext === 'doc' || ext === 'docx') return <FontAwesomeIcon icon={faFileWord} className="file-attachment-icon word-icon" />;
-  if(ext === 'jpg' || ext === 'jpeg' || ext === 'png') return <FontAwesomeIcon icon={faFileImage} className="file-attachment-icon image-icon" />;
-  return <FontAwesomeIcon icon={faFileAlt} className="file-attachment-icon generic-icon" />;
+  if(ext === 'pdf') return <FontAwesomeIcon icon={faFilePdf} className="text-red-600 w-4 h-4" />;
+  if(ext === 'doc' || ext === 'docx') return <FontAwesomeIcon icon={faFileWord} className="text-blue-600 w-4 h-4" />;
+  if(ext === 'jpg' || ext === 'jpeg' || ext === 'png') return <FontAwesomeIcon icon={faFileImage} className="text-green-600 w-4 h-4" />;
+  return <FontAwesomeIcon icon={faFileAlt} className="text-gray-600 w-4 h-4" />;
 };
 
 const StaffViewPlan = () => {
@@ -105,17 +102,8 @@ const StaffViewPlan = () => {
 
   // Update Plan State
   const [updateFormData, setUpdateFormData] = useState({
-    Goal: '',
-    Objective: '',
-    Details: '',
-    Measurement: '',
-    Baseline: '',
-    Plan: '',
-    Outcome: '',
-    Execution_Percentage: '',
-    Status: '',
-    Progress: '',
-    Comment: ''
+    outcome: '',
+    execution_percentage: ''
   });
 
   // Add Report State
@@ -178,7 +166,7 @@ const StaffViewPlan = () => {
 
     try {
       setPlanDetailLoading(true);
-      const response = await Axios.get(`http://localhost:5000/api/pland/${planIdToFetch}`, {
+      const response = await Axios.get(`http://localhost:5000/api/plan-details/${planIdToFetch}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -186,58 +174,10 @@ const StaffViewPlan = () => {
         const p = response.data.plan;
         setPlan(p);
 
-        // Set update form data
+        // Set update form data with correct field names
         setUpdateFormData({
-          goal: p.goal_name || "",
-          objective: p.objective_name || "",
-          specObjective: p.specific_objective_name || "",
-          specific_objective_detailname: p.specific_objective_detailname || "",
-          measurement: p.measurement || "",
-          baseline: p.baseline || "",
-          plan: p.plan || "",
-          description: p.details || "",
-          year: (p.year || p.year === 0) ? p.year.toString() : "",
-          Quarter: p.month || "",
-          progress: p.progress || "",
-          plan_type: p.plan_type || "",
-          cost_type: p.cost_type || "",
-          costName: p.costName || "",
-          income_exchange: p.income_exchange || "",
-          incomeName: p.incomeName || "",
-          employment_type: p.employment_type || "",
-          CIbaseline: (p.CIbaseline || p.CIbaseline === 0) ? p.CIbaseline.toString() : "",
-          CIplan: (p.CIplan || p.CIplan === 0) ? p.CIplan.toString() : "",
           outcome: (p.outcome || p.outcome === 0) ? p.outcome.toString() : "",
-          execution_percentage: (p.execution_percentage || p.execution_percentage === 0) ? p.execution_percentage.toString() : "",
-          CIoutcome: (p.CIoutcome || p.CIoutcome === 0) ? p.CIoutcome.toString() : "",
-          CIexecution_percentage: (p.CIexecution_percentage || p.CIexecution_percentage === 0) ? p.CIexecution_percentage.toString() : ""
-        });
-
-        // Set report form data
-        setReportFormData({
-          goal: p.goal_name !== undefined ? p.goal_name : null,
-          objective: p.objective_name !== undefined ? p.objective_name : null,
-          specObjective: p.specific_objective_name !== undefined ? p.specific_objective_name : null,
-          specific_objective_detailname: p.specific_objective_detailname !== undefined ? p.specific_objective_detailname : null,
-          measurement: p.measurement !== undefined ? p.measurement : null,
-          baseline: p.baseline !== undefined ? p.baseline : null,
-          plan: p.plan !== undefined ? p.plan : null,
-          description: p.details !== undefined ? p.details : null,
-          year: p.year !== undefined ? p.year : null,
-          Quarter: p.month !== undefined ? p.month : null,
-          progress: p.progress !== undefined ? p.progress : null,
-          plan_type: p.plan_type !== undefined ? p.plan_type : null,
-          cost_type: p.cost_type !== undefined ? p.cost_type : null,
-          costName: p.costName !== undefined ? p.costName : null,
-          income_exchange: p.income_exchange !== undefined ? p.income_exchange : null,
-          incomeName: p.incomeName !== undefined ? p.incomeName : null,
-          employment_type: p.employment_type !== undefined ? p.employment_type : null,
-          CIbaseline: (p.CIbaseline !== undefined && p.CIbaseline !== null) ? p.CIbaseline.toString() : null,
-          CIplan: (p.CIplan !== undefined && p.CIplan !== null) ? p.CIplan.toString() : null,
-          outcome: (p.outcome !== undefined && p.outcome !== null) ? p.outcome.toString() : "",
-          execution_percentage: (p.execution_percentage !== undefined && p.execution_percentage !== null) ? p.execution_percentage.toString() : "",
-          CIoutcome: (p.CIoutcome !== undefined && p.CIoutcome !== null) ? p.CIoutcome.toString() : null,
-          CIexecution_percentage: (p.CIexecution_percentage !== undefined && p.CIexecution_percentage !== null) ? p.CIexecution_percentage.toString() : ""
+          execution_percentage: (p.execution_percentage || p.execution_percentage === 0) ? p.execution_percentage.toString() : ""
         });
 
         setErrorMessage("");
@@ -256,45 +196,16 @@ const StaffViewPlan = () => {
 
   // Handle plan selection and view switching
   const handlePlanSelect = (planIdToSelect, viewToActivate = 'detail') => {
+    if (!planIdToSelect) {
+      setErrorMessage("Invalid Plan ID");
+      return;
+    }
+
     setSelectedPlanId(planIdToSelect);
     setActiveView(viewToActivate);
     fetchPlanDetails(planIdToSelect);
     setErrorMessage("");
     setSuccessMessage("");
-
-    // Load plan data for update form if switching to update view
-    if (viewToActivate === 'update') {
-      loadPlanForUpdate(planIdToSelect);
-    }
-  };
-
-  // Load plan data for update form
-  const loadPlanForUpdate = async (planId) => {
-    try {
-      const response = await Axios.get(`http://localhost:5000/api/plandetail/${planId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data && response.data.length > 0) {
-        const planData = response.data[0];
-        setUpdateFormData({
-          Goal: planData.Goal || '',
-          Objective: planData.Objective || '',
-          Details: planData.Details || '',
-          Measurement: planData.Measurement || '',
-          Baseline: planData.Baseline || '',
-          Plan: planData.Plan || '',
-          Outcome: planData.Outcome || '',
-          Execution_Percentage: planData.Execution_Percentage || '',
-          Status: planData.Status || '',
-          Progress: planData.Progress || '',
-          Comment: planData.Comment || ''
-        });
-      }
-    } catch (error) {
-      console.error("Error loading plan for update:", error);
-      setErrorMessage("Failed to load plan data for update");
-    }
   };
 
   // Handle update form changes
@@ -392,12 +303,6 @@ const StaffViewPlan = () => {
       setLoading(false);
     }
   };
-
-
-
-
-
-
 
   // Listen for sidebar state changes
   useEffect(() => {
@@ -511,7 +416,7 @@ const StaffViewPlan = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setPlans((prevPlans) => prevPlans.filter((plan) => plan.ID !== planIdToDelete));
+        setPlans((prevPlans) => prevPlans.filter((plan) => plan.Plan_ID !== planIdToDelete));
 
         // If the deleted plan is currently selected, reset the view
         if (selectedPlanId === planIdToDelete) {
@@ -545,217 +450,252 @@ const StaffViewPlan = () => {
     '--sidebar-width': `${sidebarState.sidebarWidth}px`
   };
 
-  // Determine CSS classes based on sidebar state
-  const getContainerClasses = () => {
-    let classes = "staff-view-plan-container";
-
-    if (sidebarState.isCollapsed) {
-      if (sidebarState.sidebarWidth === 70) {
-        classes += " admin-sidebar-collapsed";
-      } else {
-        classes += " sidebar-collapsed";
-      }
-    } else {
-      if (sidebarState.sidebarWidth === 280) {
-        classes += " admin-sidebar-expanded";
-      } else {
-        classes += " sidebar-expanded";
-      }
-    }
-
-    return classes;
-  };
-
   return (
-    <div className={`staff-plan-workspace ${isFullscreen ? 'fullscreen' : ''} ${getContainerClasses()}`} style={containerStyle}>
+    <div className={`min-h-screen bg-gray-50 transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`} style={containerStyle}>
       {/* Modern Header with Breadcrumb */}
-      <div className="workspace-header">
-        <div className="header-main">
-          <div className="header-left">
-            <div className="breadcrumb">
-              <button
-                className="breadcrumb-item"
-                onClick={() => setActiveView('dashboard')}
-              >
-                <FontAwesomeIcon icon={faHome} />
-                <span>Dashboard</span>
-              </button>
-              {selectedPlanId && (
-                <>
-                  <FontAwesomeIcon key="breadcrumb-separator" icon={faArrowLeft} className="breadcrumb-separator" />
-                  <span key="breadcrumb-item" className="breadcrumb-item active">
-                    Plan #{selectedPlanId}
-                  </span>
-                </>
-              )}
-            </div>
-            <div className="header-title">
-              <h1>
-                <FontAwesomeIcon icon={faChartLine} className="title-icon" />
-                የእቅድ አስተዳደር
-              </h1>
-              <p className="subtitle">Comprehensive Plan Management & Reporting System</p>
-            </div>
-          </div>
-
-          <div className="header-actions">
-            <div className="stats-summary">
-              <div className="stat-item">
-                <span className="stat-number">{plans.length}</span>
-                <span className="stat-label">Total Plans</span>
+      <div className="shadow-sm border-b border-gray-200">
+        <div className="px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                <button
+                  className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                  onClick={() => setActiveView('dashboard')}
+                >
+                  <FontAwesomeIcon icon={faHome} className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </button>
+                {selectedPlanId && (
+                  <>
+                    <FontAwesomeIcon icon={faArrowLeft} className="w-3 h-3 text-gray-400" />
+                    <span className="text-blue-600 font-medium">
+                      Plan #{selectedPlanId}
+                    </span>
+                  </>
+                )}
               </div>
-              {selectedPlanId && (
-                <div className="stat-item active">
-                  <span className="stat-number">#{selectedPlanId}</span>
-                  <span className="stat-label">Selected</span>
-                </div>
-              )}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+                  <FontAwesomeIcon icon={faChartLine} className="w-6 h-6 text-blue-600" />
+                  <span>የእቅድ አስተዳደር</span>
+                </h1>
+                <p className="text-gray-600 mt-1">Comprehensive Plan Management & Reporting System</p>
+              </div>
             </div>
 
-            <div className="action-buttons">
-              <button
-                className="btn btn-icon"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-              >
-                <FontAwesomeIcon icon={isFullscreen ? faCompress : faExpand} />
-              </button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+              <div className="flex items-center space-x-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{plans.length}</div>
+                  <div className="text-xs text-gray-500">Total Plans</div>
+                </div>
+                {selectedPlanId && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">#{selectedPlanId}</div>
+                    <div className="text-xs text-gray-500">Selected</div>
+                  </div>
+                )}
+              </div>
 
-              <button
-                className="btn btn-primary"
-                onClick={() => window.location.reload()}
-              >
-                <FontAwesomeIcon icon={faSync} />
-                <span>Refresh</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                >
+                  <FontAwesomeIcon icon={isFullscreen ? faCompress : faExpand} className="w-4 h-4" />
+                </button>
+
+                <button
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={() => window.location.reload()}
+                >
+                  <FontAwesomeIcon icon={faSync} className="w-4 h-4" />
+                  <span>Refresh</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Modern Navigation */}
-      <div className="workspace-navigation">
-        <div className="nav-container">
-          <div className="nav-main">
-            <button
-              className={`nav-button ${activeView === 'dashboard' ? 'active' : ''}`}
-              onClick={() => {
-                setActiveView('dashboard');
-                setSelectedPlanId(null);
-              }}
-            >
-              <FontAwesomeIcon icon={faChartLine} />
-              <span>Dashboard</span>
-            </button>
-
-            {selectedPlanId && (
-              <>
-                <button
-                  className={`nav-button ${activeView === 'detail' ? 'active' : ''}`}
-                  onClick={() => setActiveView('detail')}
-                >
-                  <FontAwesomeIcon icon={faEye} />
-                  <span>Details</span>
-                </button>
-
-                <button
-                  className={`nav-button ${activeView === 'update' ? 'active' : ''}`}
-                  onClick={() => setActiveView('update')}
-                >
-                  <FontAwesomeIcon icon={faEdit} />
-                  <span>Update</span>
-                </button>
-
-                <button
-                  className={`nav-button ${activeView === 'report' ? 'active' : ''}`}
-                  onClick={() => setActiveView('report')}
-                >
-                  <FontAwesomeIcon icon={faPlus} />
-                  <span>Report</span>
-                </button>
-              </>
-            )}
-          </div>
-
-          <div className="nav-actions">
-            {activeView === 'dashboard' && (
+      <div className="border-b border-gray-200">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3">
+            <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-0">
               <button
-                className={`btn btn-filter ${showFilters ? 'active' : ''}`}
-                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeView === 'dashboard' 
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+                onClick={() => {
+                  setActiveView('dashboard');
+                  setSelectedPlanId(null);
+                }}
               >
-                <FontAwesomeIcon icon={faFilter} />
-                <span>Filters</span>
+                <FontAwesomeIcon icon={faChartLine} className="w-4 h-4" />
+                <span>Dashboard</span>
               </button>
-            )}
+
+              {selectedPlanId && (
+                <>
+                  <button
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      activeView === 'detail' 
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setActiveView('detail')}
+                  >
+                    <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
+                    <span>Details</span>
+                  </button>
+
+                  <button
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      activeView === 'update' 
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setActiveView('update')}
+                  >
+                    <FontAwesomeIcon icon={faEdit} className="w-4 h-4" />
+                    <span>Update</span>
+                  </button>
+
+                  <button
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      activeView === 'report' 
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setActiveView('report')}
+                  >
+                    <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
+                    <span>Report</span>
+                  </button>
+
+                  <button
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      activeView === 'history' 
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                    onClick={() => setActiveView('history')}
+                  >
+                    <FontAwesomeIcon icon={faClockRotateLeft} className="w-4 h-4" />
+                    <span>History</span>
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div>
+              {activeView === 'dashboard' && (
+                <button
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                    showFilters 
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300'
+                  }`}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <FontAwesomeIcon icon={faFilter} className="w-4 h-4" />
+                  <span>Filters</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Workspace Content */}
-      <div className="workspace-content">
+      <div className="flex-1 overflow-auto">
 
         {/* Dashboard View */}
         {activeView === 'dashboard' && (
-          <div className="dashboard-view">
+          <div className="p-4 sm:p-6 lg:p-8">
             {/* Quick Stats */}
-            <div className="dashboard-stats">
-              <div className="stat-card">
-                <div className="stat-icon">
-                  <FontAwesomeIcon icon={faFileContract} />
-                </div>
-                <div className="stat-content">
-                  <h3>{plans.length}</h3>
-                  <p>Total Plans</p>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon">
-                  <FontAwesomeIcon icon={faCheckCircle} />
-                </div>
-                <div className="stat-content">
-                  <h3>{plans.filter(p => p.Status === 'Completed').length}</h3>
-                  <p>Completed</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+              <div className=" rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FontAwesomeIcon icon={faFileContract} className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold text-gray-900">{plans.length}</div>
+                    <div className="text-sm text-gray-500">Total Plans</div>
+                  </div>
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon">
-                  <FontAwesomeIcon icon={faTasks} />
-                </div>
-                <div className="stat-content">
-                  <h3>{plans.filter(p => p.Status === 'In Progress').length}</h3>
-                  <p>In Progress</p>
+              <div className="rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FontAwesomeIcon icon={faCheckCircle} className="w-8 h-8 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold text-gray-900">{plans.filter(p => p.Status === 'Completed').length}</div>
+                    <div className="text-sm text-gray-500">Completed</div>
+                  </div>
                 </div>
               </div>
 
-              <div className="stat-card">
-                <div className="stat-icon">
-                  <FontAwesomeIcon icon={faExclamationTriangle} />
+              <div className="rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FontAwesomeIcon icon={faTasks} className="w-8 h-8 text-yellow-600" />
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold text-gray-900">{plans.filter(p => p.Status === 'In Progress' || (p.Execution_Percentage && p.Execution_Percentage > 0)).length}</div>
+                    <div className="text-sm text-gray-500">In Progress</div>
+                  </div>
                 </div>
-                <div className="stat-content">
-                  <h3>{plans.filter(p => p.Status === 'Pending').length}</h3>
-                  <p>Pending</p>
+              </div>
+
+              <div className="rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="w-8 h-8 text-orange-600" />
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold text-gray-900">{plans.filter(p => p.Status === 'Pending').length}</div>
+                    <div className="text-sm text-gray-500">Pending</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FontAwesomeIcon icon={faTimes} className="w-8 h-8 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-2xl font-bold text-gray-900">{plans.filter(p => p.Status === 'Declined').length}</div>
+                    <div className="text-sm text-gray-500">Declined</div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Filters Panel */}
             {showFilters && (
-              <div className="filters-panel">
-                <div className="filters-header">
-                  <h3>
-                    <FontAwesomeIcon icon={faFilter} />
-                    Filter Plans
+              <div className="rounded-lg shadow-sm border border-gray-200 mb-6">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900 flex items-center space-x-2">
+                    <FontAwesomeIcon icon={faFilter} className="w-5 h-5 text-blue-600" />
+                    <span>Filter Plans</span>
                   </h3>
                   <button
-                    className="btn btn-close"
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                     onClick={() => setShowFilters(false)}
                   >
-                    <FontAwesomeIcon icon={faTimes} />
+                    <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="filters-content">
+                <div className="p-4">
                   <Filters
                     filters={filters}
                     handleFilterChange={handleFilterChange}
@@ -765,133 +705,156 @@ const StaffViewPlan = () => {
               </div>
             )}
 
-            {/* Plans Grid */}
-            <div className="plans-section">
-              <div className="section-header">
-                <h2>
-                  <FontAwesomeIcon icon={faFileContract} />
-                  My Plans
+            {/* Plans Section */}
+            <div className="rounded-lg shadow-sm border border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2 mb-4 sm:mb-0">
+                  <FontAwesomeIcon icon={faFileContract} className="w-6 h-6 text-blue-600" />
+                  <span>My Plans</span>
                 </h2>
-                <div className="section-actions">
-                  <div className="search-box">
-                    <FontAwesomeIcon icon={faSearch} className="search-icon" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                  <div className="relative">
+                    <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <input
                       type="text"
                       placeholder="Search plans..."
                       value={filters.search}
                       onChange={(e) => handleFilterChange({target: {name: 'search', value: e.target.value}})}
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64"
                     />
                   </div>
                   <button
-                    className="btn btn-refresh"
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
                     onClick={debouncedFetchPlans}
                     disabled={loading}
                   >
-                    <FontAwesomeIcon icon={faSync} spin={loading} />
+                    <FontAwesomeIcon icon={faSync} className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    <span>Refresh</span>
                   </button>
                 </div>
               </div>
 
-              <div className="plans-content">
+              <div className="p-6">
                 {loading ? (
-                  <div className="loading-state">
-                    <div className="loading-spinner"></div>
-                    <p>Loading plans...</p>
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <p className="mt-4 text-gray-600">Loading plans...</p>
                   </div>
                 ) : errorMessage ? (
-                  <div className="error-state">
-                    <FontAwesomeIcon icon={faExclamationTriangle} className="error-icon" />
-                    <h3>No Plans Found</h3>
-                    <p>{errorMessage}</p>
-                    <button className="btn btn-primary" onClick={debouncedFetchPlans}>
-                      <FontAwesomeIcon icon={faSync} />
-                      Try Again
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="w-16 h-16 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Plans Found</h3>
+                    <p className="text-gray-600 mb-4">{errorMessage}</p>
+                    <button 
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      onClick={debouncedFetchPlans}
+                    >
+                      <FontAwesomeIcon icon={faSync} className="w-4 h-4" />
+                      <span>Try Again</span>
                     </button>
                   </div>
                 ) : (
                   <>
-                    <div className="plans-grid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {sortedPlans.map((plan) => (
-                        <div key={plan.ID} className="plan-card" onClick={() => handlePlanSelect(plan.ID, 'detail')}>
-                          <div className="plan-header">
-                            <div className="plan-id">#{plan.ID}</div>
-                            <div className={`plan-status ${plan.Status?.toLowerCase().replace(' ', '-')}`}>
+                        <div 
+                          key={plan.Plan_ID} 
+                          className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+                          onClick={() => handlePlanSelect(plan.Plan_ID, 'detail')}
+                        >
+                          {/* Card Header */}
+                          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                            <div className="text-sm font-medium text-blue-600">#{plan.Plan_ID}</div>
+                            <div className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              plan.Status === 'Completed' ? 'bg-green-100 text-green-800' :
+                              plan.Status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                              plan.Status === 'Pending' ? 'bg-orange-100 text-orange-800' :
+                              plan.Status === 'Declined' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
                               {plan.Status}
                             </div>
                           </div>
 
-                          <div className="plan-content">
-                            <h3 className="plan-title">{plan.Goal || 'No Goal Set'}</h3>
-                            <p className="plan-objective">{plan.Objective || 'No Objective Set'}</p>
+                          {/* Card Content */}
+                          <div className="p-4">
+                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem]">
+                              {plan.Goal || 'No Goal Set'}
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2 min-h-[2.5rem]">
+                              {plan.Objective || 'No Objective Set'}
+                            </p>
+                            <p className="text-xs text-gray-500 mb-4 line-clamp-2 min-h-[2rem]">
+                              {plan.SpecificObjective || 'No Specific Objective'}
+                            </p>
 
-                            <div className="plan-metrics">
-                              <div className="metric">
-                                <span className="metric-label">Baseline:</span>
-                                <span className="metric-value">{plan.Baseline || 'N/A'}</span>
+                            {/* Metrics */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                              <div className="text-center p-2 bg-gray-50 rounded">
+                                <div className="text-xs text-gray-500">Year</div>
+                                <div className="font-medium text-gray-900">{plan.Year}</div>
                               </div>
-                              <div className="metric">
-                                <span className="metric-label">Target:</span>
-                                <span className="metric-value">{plan.Plan || 'N/A'}</span>
+                              <div className="text-center p-2 bg-gray-50 rounded">
+                                <div className="text-xs text-gray-500">Quarter</div>
+                                <div className="font-medium text-gray-900">{plan.Quarter || 'N/A'}</div>
                               </div>
-                              <div className="metric">
-                                <span className="metric-label">Outcome:</span>
-                                <span className="metric-value">{plan.Outcome || 'N/A'}</span>
+                            </div>
+
+                            {/* Meta Info */}
+                            <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                              <div className="flex items-center space-x-1">
+                                <FontAwesomeIcon icon={faCalendarAlt} className="w-3 h-3" />
+                                <span>{plan.Year}</span>
                               </div>
-                              <div className="metric">
-                                <span className="metric-label">Progress:</span>
-                                <span className="metric-value percentage">{plan.Execution_Percentage || 0}%</span>
+                              <div className="flex items-center space-x-1">
+                                <FontAwesomeIcon icon={faBuilding} className="w-3 h-3" />
+                                <span className="truncate max-w-20" title={plan.Department}>{plan.Department}</span>
                               </div>
                             </div>
                           </div>
 
-                          <div className="plan-footer">
-                            <div className="plan-meta">
-                              <span className="meta-item">
-                                <FontAwesomeIcon icon={faCalendarAlt} />
-                                {plan.Year}
-                              </span>
-                              <span className="meta-item">
-                                <FontAwesomeIcon icon={faBuilding} />
-                                {plan.Department_Name}
-                              </span>
-                            </div>
-
-                            <div className="plan-actions">
+                          {/* Card Actions - Always Visible with Tailwind Grid */}
+                          <div className="px-4 pb-4">
+                            <div className="grid grid-cols-4 gap-2">
                               <button
-                                className="btn btn-sm btn-primary"
+                                className="flex items-center justify-center px-2 py-2 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handlePlanSelect(plan.ID, 'detail');
+                                  handlePlanSelect(plan.Plan_ID, 'detail');
                                 }}
+                                title="View Details"
                               >
-                                <FontAwesomeIcon icon={faEye} />
+                                <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
                               </button>
                               <button
-                                className="btn btn-sm btn-secondary"
+                                className="flex items-center justify-center px-2 py-2 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handlePlanSelect(plan.ID, 'update');
+                                  handlePlanSelect(plan.Plan_ID, 'update');
                                 }}
+                                title="Update Plan"
                               >
-                                <FontAwesomeIcon icon={faEdit} />
+                                <FontAwesomeIcon icon={faEdit} className="w-4 h-4" />
                               </button>
                               <button
-                                className="btn btn-sm btn-success"
+                                className="flex items-center justify-center px-2 py-2 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handlePlanSelect(plan.ID, 'report');
+                                  handlePlanSelect(plan.Plan_ID, 'report');
                                 }}
+                                title="Add Report"
                               >
-                                <FontAwesomeIcon icon={faPlus} />
+                                <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
                               </button>
                               <button
-                                className="btn btn-sm btn-danger"
+                                className="flex items-center justify-center px-2 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDelete(plan.ID);
+                                  handleDelete(plan.Plan_ID);
                                 }}
+                                title="Delete Plan"
                               >
-                                <FontAwesomeIcon icon={faTrash} />
+                                <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
                               </button>
                             </div>
                           </div>
@@ -900,7 +863,7 @@ const StaffViewPlan = () => {
                     </div>
 
                     {/* Pagination */}
-                    <div className="pagination-section">
+                    <div className="mt-8">
                       <Pagination
                         currentPage={currentPage}
                         nextPage={nextPage}
@@ -916,483 +879,473 @@ const StaffViewPlan = () => {
 
         {/* Plan Details View */}
         {activeView === 'detail' && selectedPlanId && (
-          <div className="detail-view">
-            <div className="detail-header">
-              <div className="header-left">
-                <h2>
-                  <FontAwesomeIcon icon={faEye} />
-                  Plan Details
-                </h2>
-                <div className="plan-badge">
-                  Plan #{selectedPlanId}
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-2xl font-bold flex items-center space-x-3">
+                      <FontAwesomeIcon icon={faEye} className="w-6 h-6" />
+                      <span>Plan Details</span>
+                    </h2>
+                    <div className="bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                      Plan #{selectedPlanId}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('update')}
+                    >
+                      <FontAwesomeIcon icon={faEdit} className="w-4 h-4" />
+                      <span>Update Plan</span>
+                    </button>
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('report')}
+                    >
+                      <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
+                      <span>Add Report</span>
+                    </button>
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('dashboard')}
+                    >
+                      <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+                      <span>Back to Dashboard</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="header-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setActiveView('update')}
-                >
-                  <FontAwesomeIcon icon={faEdit} />
-                  Update Plan
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setActiveView('report')}
-                >
-                  <FontAwesomeIcon icon={faPlus} />
-                  Add Report
-                </button>
-                <button
-                  className="btn btn-outline"
-                  onClick={() => setActiveView('dashboard')}
-                >
-                  <FontAwesomeIcon icon={faArrowLeft} />
-                  Back to Dashboard
-                </button>
-              </div>
+              {planDetailLoading ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                  <p className="text-gray-600">Loading plan details...</p>
+                </div>
+              ) : errorMessage ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="w-16 h-16 text-red-500 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Plan</h3>
+                  <p className="text-gray-600 mb-4">{errorMessage}</p>
+                  <button 
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    onClick={() => fetchPlanDetails(selectedPlanId)}
+                  >
+                    <FontAwesomeIcon icon={faSync} className="w-4 h-4" />
+                    <span>Retry</span>
+                  </button>
+                </div>
+              ) : plan ? (
+                <div className="p-6">
+                  {/* Plan Overview Card */}
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6 border border-gray-200">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0 mb-6">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.goal_name || 'No Goal Set'}</h3>
+                        <p className="text-gray-700 mb-2">{plan.objective_name || 'No Objective Set'}</p>
+                        <p className="text-gray-600 text-sm">{plan.specific_objective_name || 'No Specific Objective'}</p>
+                      </div>
+                      <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                        plan.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                        plan.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                        plan.status === 'Pending' ? 'bg-orange-100 text-orange-800' :
+                        plan.status === 'Declined' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {plan.status}
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Execution Progress</span>
+                        <span className="text-sm font-bold text-blue-600">{plan.execution_percentage || 0}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 rounded-full transition-all duration-300"
+                          style={{width: `${Math.min(plan.execution_percentage || 0, 100)}%`}}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Basic Information */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h4 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                          <FontAwesomeIcon icon={faInfoCircle} className="w-5 h-5 text-blue-600" />
+                          <span>Basic Information</span>
+                        </h4>
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-gray-500">Plan ID:</span>
+                          <span className="text-sm text-gray-900 text-right">{plan.plan_id}</span>
+                        </div>
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-gray-500">ግብ (Goal):</span>
+                          <span className="text-sm text-gray-900 text-right max-w-xs">{plan.goal_name || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-gray-500">አላማ (Objective):</span>
+                          <span className="text-sm text-gray-900 text-right max-w-xs">{plan.objective_name || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-gray-500">ዝርዝር አላማ (Specific Objective):</span>
+                          <span className="text-sm text-gray-900 text-right max-w-xs">{plan.specific_objective_name || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-gray-500">የእቅድ ዝርዝር (Plan Details):</span>
+                          <span className="text-sm text-gray-900 text-right max-w-xs">{plan.specific_objective_detailname || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-gray-500">Details:</span>
+                          <span className="text-sm text-gray-900 text-right max-w-xs">{plan.details || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-medium text-gray-500">Measurement:</span>
+                          <span className="text-sm text-gray-900 text-right max-w-xs">{plan.measurement || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Metrics & Progress */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h4 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                          <FontAwesomeIcon icon={faChartLine} className="w-5 h-5 text-blue-600" />
+                          <span>Metrics & Progress</span>
+                        </h4>
+                      </div>
+                      <div className="p-6">
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                          <div className="text-center p-4 bg-gray-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Baseline</div>
+                            <div className="text-lg font-bold text-gray-900">{plan.baseline || 'N/A'}</div>
+                          </div>
+                          <div className="text-center p-4 bg-gray-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Target</div>
+                            <div className="text-lg font-bold text-gray-900">{plan.plan || 'N/A'}</div>
+                          </div>
+                          <div className="text-center p-4 bg-blue-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Outcome</div>
+                            <div className="text-lg font-bold text-blue-600">{plan.outcome || 'N/A'}</div>
+                          </div>
+                          <div className="text-center p-4 bg-green-50 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Progress</div>
+                            <div className="text-lg font-bold text-green-600">{plan.execution_percentage || 0}%</div>
+                          </div>
+                        </div>
+                        
+                        {/* CI Metrics if available */}
+                        {(plan.CIbaseline !== null || plan.CIplan !== null || plan.CIoutcome !== null) && (
+                          <div className="border-t border-gray-200 pt-4">
+                            <h5 className="text-sm font-semibold text-gray-700 mb-3">CI Metrics</h5>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="text-center p-3 bg-gray-50 rounded">
+                                <div className="text-xs text-gray-500 mb-1">CI Baseline</div>
+                                <div className="text-sm font-bold text-gray-900">{plan.CIbaseline || 'N/A'}</div>
+                              </div>
+                              <div className="text-center p-3 bg-gray-50 rounded">
+                                <div className="text-xs text-gray-500 mb-1">CI Plan</div>
+                                <div className="text-sm font-bold text-gray-900">{plan.CIplan || 'N/A'}</div>
+                              </div>
+                              <div className="text-center p-3 bg-blue-50 rounded">
+                                <div className="text-xs text-gray-500 mb-1">CI Outcome</div>
+                                <div className="text-sm font-bold text-blue-600">{plan.CIoutcome || 'N/A'}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Administrative Info */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h4 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                          <FontAwesomeIcon icon={faBuilding} className="w-5 h-5 text-blue-600" />
+                          <span>Administrative Info</span>
+                        </h4>
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">Created By:</span>
+                          <span className="text-sm text-gray-900 flex items-center space-x-1">
+                            <FontAwesomeIcon icon={faUser} className="w-3 h-3" />
+                            <span>{plan.created_by || 'N/A'}</span>
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">Department:</span>
+                          <span className="text-sm text-gray-900 flex items-center space-x-1">
+                            <FontAwesomeIcon icon={faBuilding} className="w-3 h-3" />
+                            <span>{plan.department_name || 'N/A'}</span>
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">Year:</span>
+                          <span className="text-sm text-gray-900 flex items-center space-x-1">
+                            <FontAwesomeIcon icon={faCalendarAlt} className="w-3 h-3" />
+                            <span>{plan.year || 'N/A'}</span>
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">Month:</span>
+                          <span className="text-sm text-gray-900">{plan.month || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">Priority:</span>
+                          <span className="text-sm text-gray-900">{plan.priority || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">Progress Status:</span>
+                          <span className="text-sm text-gray-900">{plan.progress || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">Deadline:</span>
+                          <span className="text-sm text-gray-900">
+                            {plan.deadline ? new Date(plan.deadline).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Timeline Info */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden lg:col-span-2">
+                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                        <h4 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                          <FontAwesomeIcon icon={faCalendarAlt} className="w-5 h-5 text-blue-600" />
+                          <span>Timeline Information</span>
+                        </h4>
+                      </div>
+                      <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-medium text-gray-500">Created At:</span>
+                            <span className="text-sm text-gray-900 text-right">
+                              {plan.created_at ? new Date(plan.created_at).toLocaleString() : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-medium text-gray-500">Last Updated:</span>
+                            <span className="text-sm text-gray-900 text-right">
+                              {plan.updated_at ? new Date(plan.updated_at).toLocaleString() : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-medium text-gray-500">Editing Status:</span>
+                            <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${
+                              plan.editing_status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {plan.editing_status || 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-medium text-gray-500">Reporting Status:</span>
+                            <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${
+                              plan.reporting === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {plan.reporting || 'N/A'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <FontAwesomeIcon icon={faFileContract} className="w-16 h-16 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Plan Selected</h3>
+                  <p className="text-gray-600 mb-4">Please select a plan from the dashboard to view its details.</p>
+                  <button
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    onClick={() => setActiveView('dashboard')}
+                  >
+                    <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+                    <span>Go to Dashboard</span>
+                  </button>
+                </div>
+              )}
             </div>
-
-            {planDetailLoading ? (
-              <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <p>Loading plan details...</p>
-              </div>
-            ) : errorMessage ? (
-              <div className="error-state">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="error-icon" />
-                <h3>Error Loading Plan</h3>
-                <p>{errorMessage}</p>
-                <button className="btn btn-primary" onClick={() => fetchPlanDetails(selectedPlanId)}>
-                  <FontAwesomeIcon icon={faSync} />
-                  Retry
-                </button>
-              </div>
-            ) : plan ? (
-              <div className="detail-content">
-                {/* Plan Overview Card */}
-                <div className="overview-card">
-                  <div className="overview-header">
-                    <div className="plan-title">
-                      <h3>{plan.Goal || 'No Goal Set'}</h3>
-                      <p className="plan-objective">{plan.Objective || 'No Objective Set'}</p>
-                    </div>
-                    <div className={`status-badge ${plan.Status?.toLowerCase().replace(' ', '-')}`}>
-                      {plan.Status}
-                    </div>
-                  </div>
-
-                  <div className="progress-section">
-                    <div className="progress-header">
-                      <span>Execution Progress</span>
-                      <span className="progress-percentage">{plan.Execution_Percentage || 0}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        style={{width: `${Math.min(plan.Execution_Percentage || 0, 100)}%`}}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Details Grid */}
-                <div className="details-grid">
-                  {/* Basic Information */}
-                  <div className="detail-card">
-                    <div className="card-header">
-                      <FontAwesomeIcon icon={faInfoCircle} />
-                      <h4>Basic Information</h4>
-                    </div>
-                    <div className="card-content">
-                      <div className="detail-item">
-                        <span className="label">Plan ID:</span>
-                        <span className="value">{plan.Plan_ID}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">ግብ (Goal):</span>
-                        <span className="value">{plan.Goal || 'N/A'}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">አላማ (Objective):</span>
-                        <span className="value">{plan.Objective || 'N/A'}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">Details:</span>
-                        <span className="value">{plan.Details || 'N/A'}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">Measurement:</span>
-                        <span className="value">{plan.Measurement || 'N/A'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Metrics & Progress */}
-                  <div className="detail-card">
-                    <div className="card-header">
-                      <FontAwesomeIcon icon={faChartLine} />
-                      <h4>Metrics & Progress</h4>
-                    </div>
-                    <div className="card-content">
-                      <div className="metrics-row">
-                        <div className="metric-item">
-                          <span className="metric-label">Baseline</span>
-                          <span className="metric-value">{plan.Baseline || 'N/A'}</span>
-                        </div>
-                        <div className="metric-item">
-                          <span className="metric-label">Target</span>
-                          <span className="metric-value">{plan.Plan || 'N/A'}</span>
-                        </div>
-                        <div className="metric-item">
-                          <span className="metric-label">Outcome</span>
-                          <span className="metric-value highlight">{plan.Outcome || 'N/A'}</span>
-                        </div>
-                        <div className="metric-item">
-                          <span className="metric-label">Progress</span>
-                          <span className="metric-value percentage">{plan.Execution_Percentage || 0}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Administrative Info */}
-                  <div className="detail-card">
-                    <div className="card-header">
-                      <FontAwesomeIcon icon={faBuilding} />
-                      <h4>Administrative Info</h4>
-                    </div>
-                    <div className="card-content">
-                      <div className="detail-item">
-                        <span className="label">Created By:</span>
-                        <span className="value">
-                          <FontAwesomeIcon icon={faUser} />
-                          {plan.Created_By}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">Department:</span>
-                        <span className="value">
-                          <FontAwesomeIcon icon={faBuilding} />
-                          {plan.Department_Name}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">Year:</span>
-                        <span className="value">
-                          <FontAwesomeIcon icon={faCalendarAlt} />
-                          {plan.Year}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">Quarter:</span>
-                        <span className="value">{plan.Quarter || 'N/A'}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">Progress Status:</span>
-                        <span className="value">{plan.Progress || 'N/A'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Comments */}
-                  {plan.Comment && (
-                    <div className="detail-card full-width">
-                      <div className="card-header">
-                        <FontAwesomeIcon icon={faComments} />
-                        <h4>Comments</h4>
-                      </div>
-                      <div className="card-content">
-                        <div className="comment-content">
-                          {plan.Comment}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="no-plan-state">
-                <FontAwesomeIcon icon={faFileContract} className="no-plan-icon" />
-                <h3>No Plan Selected</h3>
-                <p>Please select a plan from the dashboard to view its details.</p>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setActiveView('dashboard')}
-                >
-                  <FontAwesomeIcon icon={faArrowLeft} />
-                  Go to Dashboard
-                </button>
-              </div>
-            )}
           </div>
         )}
 
         {/* Update Plan View */}
         {activeView === 'update' && selectedPlanId && (
-          <div className="update-view">
-            <div className="update-header">
-              <div className="header-left">
-                <h2>
-                  <FontAwesomeIcon icon={faEdit} />
-                  Update Plan
-                </h2>
-                <div className="plan-badge">
-                  Plan #{selectedPlanId}
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-2xl font-bold flex items-center space-x-3">
+                      <FontAwesomeIcon icon={faEdit} className="w-6 h-6" />
+                      <span>Update Plan</span>
+                    </h2>
+                    <div className="bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                      Plan #{selectedPlanId}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('detail')}
+                    >
+                      <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
+                      <span>View Details</span>
+                    </button>
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('dashboard')}
+                    >
+                      <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+                      <span>Back to Dashboard</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="header-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setActiveView('detail')}
-                >
-                  <FontAwesomeIcon icon={faEye} />
-                  View Details
-                </button>
-                <button
-                  className="btn btn-outline"
-                  onClick={() => setActiveView('dashboard')}
-                >
-                  <FontAwesomeIcon icon={faArrowLeft} />
-                  Back to Dashboard
-                </button>
-              </div>
-            </div>
+              <div className="p-6">
+                <div className="max-w-4xl mx-auto">
+                  <form onSubmit={handleUpdateSubmit} className="space-y-8">
+                    {/* Plan Information Display */}
+                    {plan && (
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-gray-200">
+                        <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200">
+                          <FontAwesomeIcon icon={faInfoCircle} className="w-6 h-6 text-blue-600" />
+                          <h3 className="text-xl font-semibold text-gray-900">Plan Information</h3>
+                        </div>
+                        
+                        <div className="rounded-lg p-6 border border-gray-200">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex justify-between items-start py-3 border-b border-gray-100">
+                              <span className="text-sm font-medium text-gray-500">Goal:</span>
+                              <span className="text-sm text-gray-900 text-right max-w-xs">{plan.goal_name}</span>
+                            </div>
+                            <div className="flex justify-between items-start py-3 border-b border-gray-100">
+                              <span className="text-sm font-medium text-gray-500">Objective:</span>
+                              <span className="text-sm text-gray-900 text-right max-w-xs">{plan.objective_name}</span>
+                            </div>
+                            <div className="flex justify-between items-start py-3 border-b border-gray-100">
+                              <span className="text-sm font-medium text-gray-500">Specific Objective:</span>
+                              <span className="text-sm text-gray-900 text-right max-w-xs">{plan.specific_objective_name}</span>
+                            </div>
+                            <div className="flex justify-between items-start py-3 border-b border-gray-100">
+                              <span className="text-sm font-medium text-gray-500">Plan Details:</span>
+                              <span className="text-sm text-gray-900 text-right max-w-xs">{plan.specific_objective_detailname}</span>
+                            </div>
+                            <div className="flex justify-between items-start py-3 border-b border-gray-100">
+                              <span className="text-sm font-medium text-gray-500">Baseline:</span>
+                              <span className="text-sm text-gray-900 text-right max-w-xs">{plan.baseline}</span>
+                            </div>
+                            <div className="flex justify-between items-start py-3 border-b border-gray-100">
+                              <span className="text-sm font-medium text-gray-500">Target:</span>
+                              <span className="text-sm text-gray-900 text-right max-w-xs">{plan.plan}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-            <div className="update-content">
-              <div className="update-form-container">
-                <form onSubmit={handleUpdateSubmit} className="update-form">
-                  <div className="form-grid">
-                    {/* Basic Information Section */}
-                    <div className="form-section">
-                      <div className="section-header">
-                        <FontAwesomeIcon icon={faInfoCircle} />
-                        <h3>Basic Information</h3>
+                    {/* Update Section */}
+                    <div className="rounded-lg p-6 border border-gray-200">
+                      <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200">
+                        <FontAwesomeIcon icon={faChartLine} className="w-6 h-6 text-blue-600" />
+                        <h3 className="text-xl font-semibold text-gray-900">Update Progress</h3>
                       </div>
 
-                      <div className="form-group">
-                        <label htmlFor="Goal">ግብ (Goal) *</label>
-                        <textarea
-                          id="Goal"
-                          name="Goal"
-                          value={updateFormData.Goal}
-                          onChange={handleUpdateFormChange}
-                          className="form-control"
-                          rows="3"
-                          required
-                          placeholder="Enter the main goal..."
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="Objective">አላማ (Objective) *</label>
-                        <textarea
-                          id="Objective"
-                          name="Objective"
-                          value={updateFormData.Objective}
-                          onChange={handleUpdateFormChange}
-                          className="form-control"
-                          rows="3"
-                          required
-                          placeholder="Enter the objective..."
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="Details">Details</label>
-                        <textarea
-                          id="Details"
-                          name="Details"
-                          value={updateFormData.Details}
-                          onChange={handleUpdateFormChange}
-                          className="form-control"
-                          rows="4"
-                          placeholder="Enter additional details..."
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="Measurement">Measurement</label>
-                        <input
-                          type="text"
-                          id="Measurement"
-                          name="Measurement"
-                          value={updateFormData.Measurement}
-                          onChange={handleUpdateFormChange}
-                          className="form-control"
-                          placeholder="How will this be measured?"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Metrics Section */}
-                    <div className="form-section">
-                      <div className="section-header">
-                        <FontAwesomeIcon icon={faChartLine} />
-                        <h3>Metrics & Progress</h3>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label htmlFor="Baseline">Baseline</label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label htmlFor="outcome" className="block text-sm font-medium text-gray-700 mb-2">
+                            ክንውን (Outcome) *
+                          </label>
                           <input
                             type="number"
-                            id="Baseline"
-                            name="Baseline"
-                            value={updateFormData.Baseline}
+                            id="outcome"
+                            name="outcome"
+                            value={updateFormData.outcome}
                             onChange={handleUpdateFormChange}
-                            className="form-control"
-                            placeholder="Starting value"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Enter actual outcome"
+                            required
                           />
                         </div>
 
-                        <div className="form-group">
-                          <label htmlFor="Plan">Target Plan</label>
+                        <div>
+                          <label htmlFor="execution_percentage" className="block text-sm font-medium text-gray-700 mb-2">
+                            Execution Percentage *
+                          </label>
                           <input
                             type="number"
-                            id="Plan"
-                            name="Plan"
-                            value={updateFormData.Plan}
+                            id="execution_percentage"
+                            name="execution_percentage"
+                            value={updateFormData.execution_percentage}
                             onChange={handleUpdateFormChange}
-                            className="form-control"
-                            placeholder="Target value"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label htmlFor="Outcome">ክንውን (Outcome)</label>
-                          <input
-                            type="number"
-                            id="Outcome"
-                            name="Outcome"
-                            value={updateFormData.Outcome}
-                            onChange={handleUpdateFormChange}
-                            className="form-control"
-                            placeholder="Actual outcome"
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="Execution_Percentage">Execution %</label>
-                          <input
-                            type="number"
-                            id="Execution_Percentage"
-                            name="Execution_Percentage"
-                            value={updateFormData.Execution_Percentage}
-                            onChange={handleUpdateFormChange}
-                            className="form-control"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             min="0"
                             max="100"
-                            placeholder="0-100"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label htmlFor="Status">Status</label>
-                          <select
-                            id="Status"
-                            name="Status"
-                            value={updateFormData.Status}
-                            onChange={handleUpdateFormChange}
-                            className="form-control"
-                          >
-                            <option value="">Select Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                            <option value="On Hold">On Hold</option>
-                            <option value="Cancelled">Cancelled</option>
-                          </select>
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="Progress">Progress</label>
-                          <input
-                            type="text"
-                            id="Progress"
-                            name="Progress"
-                            value={updateFormData.Progress}
-                            onChange={handleUpdateFormChange}
-                            className="form-control"
-                            placeholder="Progress description"
+                            step="0.1"
+                            placeholder="Enter execution percentage (0-100)"
+                            required
                           />
                         </div>
                       </div>
                     </div>
 
-                    {/* Comments Section */}
-                    <div className="form-section full-width">
-                      <div className="section-header">
-                        <FontAwesomeIcon icon={faComments} />
-                        <h3>Comments</h3>
+                    {/* Form Actions */}
+                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                      <button
+                        type="button"
+                        className="flex items-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        onClick={() => setActiveView('detail')}
+                        disabled={loading}
+                      >
+                        <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
+                        <span>Cancel</span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Updating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <FontAwesomeIcon icon={faSave} className="w-4 h-4" />
+                            <span>Update Plan</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Messages */}
+                    {errorMessage && (
+                      <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                        <FontAwesomeIcon icon={faExclamationTriangle} className="w-5 h-5" />
+                        <span>{errorMessage}</span>
                       </div>
+                    )}
 
-                      <div className="form-group">
-                        <label htmlFor="Comment">Additional Comments</label>
-                        <textarea
-                          id="Comment"
-                          name="Comment"
-                          value={updateFormData.Comment}
-                          onChange={handleUpdateFormChange}
-                          className="form-control"
-                          rows="4"
-                          placeholder="Add any additional comments or notes..."
-                        />
+                    {successMessage && (
+                      <div className="flex items-center space-x-3 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                        <FontAwesomeIcon icon={faCheckCircle} className="w-5 h-5" />
+                        <span>{successMessage}</span>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Form Actions */}
-                  <div className="form-actions">
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={() => setActiveView('detail')}
-                      disabled={loading}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faSave} />
-                          Update Plan
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Messages */}
-                  {errorMessage && (
-                    <div className="alert alert-danger">
-                      <FontAwesomeIcon icon={faExclamationTriangle} />
-                      {errorMessage}
-                    </div>
-                  )}
-
-                  {successMessage && (
-                    <div className="alert alert-success">
-                      <FontAwesomeIcon icon={faCheckCircle} />
-                      {successMessage}
-                    </div>
-                  )}
-                </form>
+                    )}
+                  </form>
+                </div>
               </div>
             </div>
           </div>
@@ -1400,158 +1353,251 @@ const StaffViewPlan = () => {
 
         {/* Add Report View */}
         {activeView === 'report' && selectedPlanId && (
-          <div className="report-view">
-            <div className="report-header">
-              <div className="header-left">
-                <h2>
-                  <FontAwesomeIcon icon={faPlus} />
-                  Add Report
-                </h2>
-                <div className="plan-badge">
-                  Plan #{selectedPlanId}
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-2xl font-bold flex items-center space-x-3">
+                      <FontAwesomeIcon icon={faPlus} className="w-6 h-6" />
+                      <span>Add Report</span>
+                    </h2>
+                    <div className="bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                      Plan #{selectedPlanId}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('detail')}
+                    >
+                      <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
+                      <span>View Details</span>
+                    </button>
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('dashboard')}
+                    >
+                      <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+                      <span>Back to Dashboard</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="header-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setActiveView('detail')}
-                >
-                  <FontAwesomeIcon icon={faEye} />
-                  View Details
-                </button>
-                <button
-                  className="btn btn-outline"
-                  onClick={() => setActiveView('dashboard')}
-                >
-                  <FontAwesomeIcon icon={faArrowLeft} />
-                  Back to Dashboard
-                </button>
-              </div>
-            </div>
-
-            <div className="report-content">
-              <div className="report-form-container">
-                <form onSubmit={handleReportSubmit} className="report-form">
-                  <div className="form-section">
-                    <div className="section-header">
-                      <FontAwesomeIcon icon={faFileContract} />
-                      <h3>Report Content</h3>
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="report_content">Report Description *</label>
-                      <textarea
-                        id="report_content"
-                        name="report_content"
-                        value={reportFormData.report_content}
-                        onChange={handleReportFormChange}
-                        className="form-control"
-                        rows="8"
-                        required
-                        placeholder="Enter your detailed report content here..."
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="attachments">Attachments</label>
-                      <div className="file-upload-area">
-                        <input
-                          type="file"
-                          id="attachments"
-                          multiple
-                          onChange={handleReportFileChange}
-                          className="file-input"
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-                        />
-                        <div className="file-upload-label">
-                          <FontAwesomeIcon icon={faCloudUpload} />
-                          <span>Choose files or drag and drop</span>
-                          <small>PDF, DOC, DOCX, JPG, PNG, TXT files allowed</small>
-                        </div>
+              <div className="p-6">
+                <div className="max-w-4xl mx-auto">
+                  <form onSubmit={handleReportSubmit} className="space-y-8">
+                    <div className="rounded-lg p-6 border border-gray-200">
+                      <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200">
+                        <FontAwesomeIcon icon={faFileContract} className="w-6 h-6 text-blue-600" />
+                        <h3 className="text-xl font-semibold text-gray-900">Report Content</h3>
                       </div>
 
-                      {reportFiles.length > 0 && (
-                        <div className="selected-files">
-                          <h4>Selected Files:</h4>
-                          <ul>
-                            {reportFiles.map((file, index) => (
-                              <li key={index} className="file-item">
-                                {renderFileIcon(file.name)}
-                                <span>{file.name}</span>
-                                <span className="file-size">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                              </li>
-                            ))}
-                          </ul>
+                      <div className="space-y-6">
+                        <div>
+                          <label htmlFor="report_content" className="block text-sm font-medium text-gray-700 mb-2">
+                            Report Description *
+                          </label>
+                          <textarea
+                            id="report_content"
+                            name="report_content"
+                            value={reportFormData.report_content}
+                            onChange={handleReportFormChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                            rows="8"
+                            required
+                            placeholder="Enter your detailed report content here..."
+                          />
                         </div>
-                      )}
+
+                        <div>
+                          <label htmlFor="attachments" className="block text-sm font-medium text-gray-700 mb-2">
+                            Attachments
+                          </label>
+                          <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                            <input
+                              type="file"
+                              id="attachments"
+                              multiple
+                              onChange={handleReportFileChange}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                            />
+                            <div className="flex flex-col items-center space-y-3">
+                              <FontAwesomeIcon icon={faCloudUpload} className="w-12 h-12 text-blue-600" />
+                              <div>
+                                <span className="text-lg font-medium text-gray-900">Choose files or drag and drop</span>
+                                <p className="text-sm text-gray-500 mt-1">PDF, DOC, DOCX, JPG, PNG, TXT files allowed</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {reportFiles.length > 0 && (
+                            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                              <h4 className="text-sm font-semibold text-gray-900 mb-3">Selected Files:</h4>
+                              <ul className="space-y-2">
+                                {reportFiles.map((file, index) => (
+                                  <li key={index} className="flex items-center space-x-3 p-2 rounded border border-gray-200">
+                                    {renderFileIcon(file.name)}
+                                    <span className="flex-1 text-sm text-gray-900">{file.name}</span>
+                                    <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        {uploadProgress > 0 && uploadProgress < 100 && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-700">Uploading...</span>
+                              <span className="text-blue-600 font-medium">{uploadProgress}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{width: `${uploadProgress}%`}}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {uploadProgress > 0 && uploadProgress < 100 && (
-                      <div className="upload-progress">
-                        <div className="progress-bar">
-                          <div
-                            className="progress-fill"
-                            style={{width: `${uploadProgress}%`}}
-                          ></div>
-                        </div>
-                        <span>{uploadProgress}% uploaded</span>
+                    {/* Form Actions */}
+                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                      <button
+                        type="button"
+                        className="flex items-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        onClick={() => setActiveView('detail')}
+                        disabled={loading}
+                      >
+                        <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
+                        <span>Cancel</span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        disabled={loading || !reportFormData.report_content.trim()}
+                      >
+                        {loading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Submitting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
+                            <span>Add Report</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Messages */}
+                    {errorMessage && (
+                      <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                        <FontAwesomeIcon icon={faExclamationTriangle} className="w-5 h-5" />
+                        <span>{errorMessage}</span>
                       </div>
                     )}
-                  </div>
 
-                  {/* Form Actions */}
-                  <div className="form-actions">
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={() => setActiveView('detail')}
-                      disabled={loading}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={loading || !reportFormData.report_content.trim()}
-                    >
-                      {loading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faPlus} />
-                          Add Report
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Messages */}
-                  {errorMessage && (
-                    <div className="alert alert-danger">
-                      <FontAwesomeIcon icon={faExclamationTriangle} />
-                      {errorMessage}
-                    </div>
-                  )}
-
-                  {successMessage && (
-                    <div className="alert alert-success">
-                      <FontAwesomeIcon icon={faCheckCircle} />
-                      {successMessage}
-                    </div>
-                  )}
-                </form>
+                    {successMessage && (
+                      <div className="flex items-center space-x-3 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                        <FontAwesomeIcon icon={faCheckCircle} className="w-5 h-5" />
+                        <span>{successMessage}</span>
+                      </div>
+                    )}
+                  </form>
+                </div>
               </div>
             </div>
           </div>
         )}
 
+        {/* Approval History View */}
+        {activeView === 'history' && selectedPlanId && (
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-2xl font-bold flex items-center space-x-3">
+                      <FontAwesomeIcon icon={faClockRotateLeft} className="w-6 h-6" />
+                      <span>Approval Workflow History</span>
+                    </h2>
+                    <div className="bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
+                      Plan #{selectedPlanId}
+                    </div>
+                  </div>
 
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('detail')}
+                    >
+                      <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
+                      <span>View Details</span>
+                    </button>
+                    <button
+                      className="flex items-center space-x-2 px-4 py-2 bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-colors"
+                      onClick={() => setActiveView('dashboard')}
+                    >
+                      <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+                      <span>Back to Dashboard</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="max-w-6xl mx-auto space-y-8">
+                  {/* Introduction Card */}
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-gray-200">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <FontAwesomeIcon icon={faInfoCircle} className="w-6 h-6 text-blue-600" />
+                      <h3 className="text-xl font-semibold text-gray-900">Approval Workflow Tracking</h3>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed">
+                      Track the complete approval journey of your plan through different organizational levels. 
+                      This timeline shows all approval steps, comments from approvers, and the current status 
+                      of your plan in the workflow process.
+                    </p>
+                  </div>
+
+                  {/* Timeline Container */}
+                  <div className="rounded-lg border border-gray-200">
+                    <div className="p-6">
+                      <ApprovalHistory planId={selectedPlanId} showFullHistory={true} />
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-center space-x-4 pt-6 border-t border-gray-200">
+                    <button
+                      className="flex items-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      onClick={() => setActiveView('detail')}
+                    >
+                      <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
+                      <span>Back to Plan Details</span>
+                    </button>
+                    <button
+                      className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      onClick={() => window.print()}
+                    >
+                      <FontAwesomeIcon icon={faDownload} className="w-4 h-4" />
+                      <span>Print History</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

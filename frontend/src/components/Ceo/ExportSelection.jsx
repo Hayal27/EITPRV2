@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { printSelectedSections } from "./utils/printUtil";
 import { downloadPDFofSelectedSections } from "./utils/pdfExportUtil";
-import styles from "./StaffDashboard.module.css";
 
 /*
   ExportSelection Component

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './AdminComponents.css';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('general');

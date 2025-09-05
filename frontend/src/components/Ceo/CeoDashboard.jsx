@@ -25,8 +25,7 @@ import DashboardViewSelector from "./DashboardViewSelector";
 import { initializeCeoSidebarIntegration, useCeoSidebarIntegration } from './CeoSidebarUtils';
 
 // Professional CEO Dashboard Styles
-import "./CeoDashboard.css";
-import "../admin/AdminComponents.css"; // Import admin styles for consistency
+
 
 
 

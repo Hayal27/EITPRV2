@@ -4,7 +4,6 @@ import Axios from "axios";
 import Cropper from "react-easy-crop";
 import { useAuth } from "../../Auths/AuthContex";
 import getCroppedImg from "./cropImageHelper";
-import "../../../assets/css/magic-tooltip.css";
 
 const ProfilePictureUpload = ({ token, onUploadSuccess, onCancel }) => {
   const { state } = useAuth();

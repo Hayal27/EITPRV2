@@ -1,6 +1,5 @@
 import React from "react";
 import { downloadPDFofSelectedSections } from "./utils/pdfExportUtil";
-import styles from "./StaffDashboard.module.css";
 
 const DownloadPDFButton = ({ contentRef }) => {
   const handleDownload = async () => {

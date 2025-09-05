@@ -167,7 +167,7 @@ const PlansTable = ({ plans, handleSorting, sortConfig }) => {
                 <td>{plan.SpecificObjective || "N/A"}</td>
                 <td>
                   <Link
-                    to={`update/${plan.Plan_ID}`}
+                    to={`/plan/StaffViewDeclinedPlan/update/${plan.Plan_ID}`}
                     className="btn btn-primary btn-sm me-1"
                   >
                     Update

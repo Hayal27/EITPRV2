@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import Axios from "axios";
-import "../../../assets/css/view.css";
 import happy from "../../../assets/img/happy.gif";
 import sad from "../../../assets/img/sad.gif";
 import debounce from "lodash.debounce";
@@ -29,6 +28,13 @@ const CeoViewDeclinedReport = () => {
   const token = localStorage.getItem("token");
   // State for plan details
   const [planDetail, setPlanDetail] = useState(null);
+
+  // Sidebar state management
+  const [sidebarState, setSidebarState] = useState({
+    isCollapsed: false,
+    sidebarWidth: 280, // Reduced from 288
+    mainContentMargin: 280 // Reduced from 288
+  });
 
   // Fetch plans based on filters and pagination
   const fetchPlans = async () => {
@@ -77,6 +83,74 @@ const CeoViewDeclinedReport = () => {
   useEffect(() => {
     debouncedFetchPlans(); // Fetch plans whenever filters change or pagination changes
   }, [filters, currentPage]);
+
+  // Listen for sidebar state changes
+  useEffect(() => {
+    const handleSidebarToggle = (event) => {
+      const { isCollapsed, width } = event.detail;
+      const isMobile = window.innerWidth <= 768;
+      
+      console.log('Sidebar toggle event:', { isCollapsed, width, isMobile }); // Debug log
+      
+      setSidebarState({
+        isCollapsed,
+        sidebarWidth: width,
+        mainContentMargin: isMobile ? 0 : width
+      });
+    };
+
+    // Listen for sidebar toggle events
+    window.addEventListener('sidebarToggle', handleSidebarToggle);
+
+    // Get initial sidebar state from localStorage and detect actual sidebar
+    const savedCollapsed = localStorage.getItem('sidebar_collapsed');
+    const isMobile = window.innerWidth <= 768;
+    
+    // Check if sidebar element exists to get actual width
+    const sidebarElement = document.querySelector('aside[class*="sidebar"]');
+    let actualWidth = 320; // default expanded width
+    
+    if (sidebarElement) {
+      const computedStyle = window.getComputedStyle(sidebarElement);
+      actualWidth = parseInt(computedStyle.width) || 320;
+    }
+    
+    if (savedCollapsed !== null) {
+      const isCollapsed = savedCollapsed === 'true';
+      const width = isCollapsed ? 80 : actualWidth;
+      
+      console.log('Initial sidebar state:', { isCollapsed, width, actualWidth, isMobile }); // Debug log
+      
+      setSidebarState({
+        isCollapsed,
+        sidebarWidth: width,
+        mainContentMargin: isMobile ? 0 : width
+      });
+    } else {
+      // No saved state, use default expanded
+      setSidebarState({
+        isCollapsed: false,
+        sidebarWidth: actualWidth,
+        mainContentMargin: isMobile ? 0 : actualWidth
+      });
+    }
+
+    // Handle window resize
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      setSidebarState(prev => ({
+        ...prev,
+        mainContentMargin: isMobile ? 0 : prev.sidebarWidth
+      }));
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('sidebarToggle', handleSidebarToggle);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Handle sorting
   const handleSorting = (key) => {
@@ -176,17 +250,40 @@ const CeoViewDeclinedReport = () => {
   };
 
   return (
-    <main id="main" className="main">
-      <div className="pagetitle">
-        <nav>
-          <ol className="breadcrumb">
-            <li className="breadcrumb-item">
-              <Link to="/">Ceo</Link>
-            </li>
-            <li className="breadcrumb-item active">Plan Management</li>
-          </ol>
-        </nav>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">CEO Dashboard - Declined Reports</h1>
+              <nav className="flex mt-2" aria-label="Breadcrumb">
+                <ol className="inline-flex items-center space-x-1 md:space-x-3">
+                  <li className="inline-flex items-center">
+                    <Link to="/" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                      </svg>
+                      CEO
+                    </Link>
+                  </li>
+                  <li>
+                    <div className="flex items-center">
+                      <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                      <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Plan Management</span>
+                    </div>
+                  </li>
+                </ol>
+              </nav>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
       {showPopup && (
         <div className={`popup ${popupType}`}>
@@ -409,7 +506,8 @@ const CeoViewDeclinedReport = () => {
           <button onClick={closePlanDetails} className="btn btn-primary">Close</button>
         </div>
       )}
-    </main>
+      </div>
+    </div>
   );
 };
 

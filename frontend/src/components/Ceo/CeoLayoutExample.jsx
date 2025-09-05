@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import CeoSidebar from './CeoSidebar';
+
 import { initializeCeoSidebarIntegration, getCurrentSidebarState } from './CeoSidebarUtils';
 import './CeoLayoutExample.css';
 

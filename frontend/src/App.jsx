@@ -1,16 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAuth } from "./components/Auths/AuthContex";
 import Login from "./components/login/Login";
-import 'bootstrap/dist/css/bootstrap.min.css';
 import ProfilePictureUpload from "./components/header/profile/ProfilePictureUpload.jsx";
 
-// Import professional admin styles
-import './components/admin/AdminComponents.css';
-import './components/admin/Sidebar.css';
-import './components/header/Header.css';
-import { initializeSidebar } from './components/admin/sidebarUtils';
+// Import professional admin styles and responsive CSS
 import ProtectedRoute from './components/ProtectedRoute';
+import './styles/responsive.css';
 
 // Core Components
 import Sidebar from "./components/admin/Sidebar";
@@ -77,11 +73,6 @@ import StafAddReport from "./components/staff/plan/view/StafAddReport";
 function App() {
   const { state } = useAuth();
 
-  // Initialize sidebar functionality when component mounts
-  useEffect(() => {
-    initializeSidebar();
-  }, []);
-
   console.log('🚀 App: Rendering with auth state:', state.isAuthenticated);
   console.log('🚀 App: User role:', state.role_id);
 
@@ -89,12 +80,13 @@ function App() {
     <>
       <BrowserRouter>
         {state.isAuthenticated ? (
-          <>
+          <div className="min-h-screen bg-gray-50">
             <Header />
-
             <Sidebar />
-
-            <Routes>
+            
+            {/* Main Content with Responsive Layout */}
+            <main className="main-content transition-all duration-300 ease-in-out pt-16 lg:pt-20 ml-0 lg:ml-80">
+              <Routes>
               {/* Profile Route - Available to all authenticated users */}
               <Route path="/ProfilePictureUpload" element={
                 <ProtectedRoute path="/ProfilePictureUpload">
@@ -260,6 +252,12 @@ function App() {
                 </ProtectedRoute>
               } />
 
+              <Route path="/plan/StaffViewDeclinedPlan/update/:planId" element={
+                <ProtectedRoute path="/plan/StaffViewDeclinedPlan/update">
+                  <UpdatePlan />
+                </ProtectedRoute>
+              } />
+
               <Route path="/plan/view/detail/:planId" element={
                 <ProtectedRoute path="/plan/view/detail">
                   <PlanDetail />
@@ -366,10 +364,11 @@ function App() {
                   </div>
                 </div>
               } />
-            </Routes>
+              </Routes>
+            </main>
 
             <Footer />
-          </>
+          </div>
         ) : (
           <Login />
         )}

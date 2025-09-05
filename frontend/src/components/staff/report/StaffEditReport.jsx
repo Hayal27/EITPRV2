@@ -1,6 +1,5 @@
 import Axios from "axios";
 import React, { useState, useEffect } from "react";
-import "../../../assets/css/planform.css";
 
 const StaffEditReport = ({ reportId }) => {
   const [formData, setFormData] = useState({

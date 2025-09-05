@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './AdminComponents.css';
-import './MenuPermissions.css'; // Custom styles with mp- prefix
+
 
 // Add some inline styles for better UX
 const pathClickableStyle = {

@@ -1,6 +1,5 @@
 import Axios from "axios";
 import React, { useState } from 'react';
-import '../../../assets/css/planform.css';
 import sad from '../../../assets/img/sad.gif';
 import happy from '../../../assets/img/happy.gif';
 

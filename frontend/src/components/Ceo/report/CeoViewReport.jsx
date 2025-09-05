@@ -8,7 +8,6 @@ import debounce from "lodash.debounce";
 import Filters from "./Filters";
 import PlansTable from "./PlansTable";
 import Pagination from "./Pagination";
-import "./CeoViewReport.css";
 
 const CeoViewPlan = () => {
   const [plans, setPlans] = useState([]);

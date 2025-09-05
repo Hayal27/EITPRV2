@@ -2,8 +2,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Tooltip as ReactTooltip } from "react-tooltip"; // Using react-tooltip v5 named import
-import "../../../assets/css/viewplan.css";
-import "../../../assets/css/magic-tooltip.css";
 
 const TeamleaderSubmittedViewPlan = () => {
   const [plans, setPlans] = useState([]);

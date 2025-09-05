@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../Auths/AuthContex';
-import './CeoSidebar.css';
-import '../admin/Sidebar.css'; // Import admin sidebar styles for consistency
 
 function CeoSidebar({ onSidebarToggle }) {
   const [isCollapsed, setIsCollapsed] = useState(false);

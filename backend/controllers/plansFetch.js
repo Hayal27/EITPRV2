@@ -202,7 +202,7 @@ const addPlan = (req, res) => {
           so.specific_objective_name AS SpecificObjective,
           sod.specific_objective_detail_id AS Specific_Objective_Detail_ID,
           sod.details AS Specific_Objective_Detail,
-          p.status AS Status,
+          COALESCE(aw.status, p.status) AS Status,
           p.created_at AS Created_At,
           p.updated_at AS Updated_At,
           d.name AS Department,
@@ -612,7 +612,7 @@ const getPlanDetail = async (req, res) => {
         g.name AS goal_name,
         so.specific_objective_name
       FROM plans p
-      JOIN ApprovalWorkflow aw ON p.plan_id = aw.plan_id
+      JOIN approvalworkflow aw ON p.plan_id = aw.plan_id
       JOIN departments d ON p.department_id = d.department_id
       JOIN objectives o ON p.objective_id = o.objective_id
       JOIN goals g ON p.goal_id = g.goal_id

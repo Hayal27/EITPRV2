@@ -25,6 +25,7 @@ router.put("/addReport/:planId", verifyToken, upload.array("files"), addReport);
 
 router.get("/planget/:planId", verifyToken, getPlanById);
 router.get("/pland/:id", verifyToken, getPlanDetail);
+router.get("/plan-details/:id", verifyToken, getPlanDetail);
 router.get("/planorgd/:id", getApprovedOrgPlans);
 
 // Route to add a new plan

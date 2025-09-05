@@ -1,6 +1,5 @@
 import Axios from "axios";
 import React, { useEffect, useState } from "react";
-import '../../assets/css/adduser.css';
 
 
 const UserRegistration = () => {

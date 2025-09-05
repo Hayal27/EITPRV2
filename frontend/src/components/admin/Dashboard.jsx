@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
-import './AdminComponents.css';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -106,11 +105,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <main id="main" className="main">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard...</p>
         </div>
       </main>
     );
@@ -118,270 +116,317 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <main id="main" className="main">
-        <div className="alert alert-danger" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
-          {error}
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-red-800 font-medium">Error Loading Dashboard</h3>
+              <p className="text-red-700 text-sm mt-1">{error}</p>
+            </div>
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <>
-      <main className="admin-main-content">
-        <div className="dashboard-container">
-          <div className="dashboard-header">
-            <div className="page-title">
-              <h1>Admin Dashboard</h1>
-              <nav aria-label="breadcrumb">
-                <ol className="breadcrumb">
-                  <li className="breadcrumb-item"><a href="/">Home</a></li>
-                  <li className="breadcrumb-item active">Dashboard</li>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <nav className="flex mt-2" aria-label="Breadcrumb">
+                <ol className="inline-flex items-center space-x-1 md:space-x-3">
+                  <li className="inline-flex items-center">
+                    <a href="/" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                      </svg>
+                      Home
+                    </a>
+                  </li>
+                  <li>
+                    <div className="flex items-center">
+                      <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                      <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Dashboard</span>
+                    </div>
+                  </li>
                 </ol>
               </nav>
             </div>
-            <div className="dashboard-actions">
-              <button className="btn btn-primary btn-sm">
-                <i className="bi bi-arrow-clockwise me-2"></i>
-                Refresh
-              </button>
+            <button 
+              onClick={fetchDashboardData}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Total Employees Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Employees</p>
+                <p className="text-2xl font-bold text-gray-900">{statistics.totalEmployees}</p>
+                <p className="text-sm text-green-600 font-medium">
+                  +{statistics.recentRegistrations} new this month
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="dashboard-content">
-            <div className="row g-4">
-
-            {/* Statistics Cards */}
-            <div className="col-xxl-3 col-md-6">
-              <div className="card info-card sales-card">
-                <div className="card-body">
-                  <h5 className="card-title">Total Employees</h5>
-                  <div className="d-flex align-items-center">
-                    <div className="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i className="bi bi-people"></i>
-                    </div>
-                    <div className="ps-3">
-                      <h6>{statistics.totalEmployees}</h6>
-                      <span className="text-success small pt-1 fw-bold">
-                        {statistics.recentRegistrations}
-                      </span>
-                      <span className="text-muted small pt-2 ps-1">new this month</span>
-                    </div>
-                  </div>
+          {/* Active Users Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
               </div>
-            </div>
-
-            <div className="col-xxl-3 col-md-6">
-              <div className="card info-card revenue-card">
-                <div className="card-body">
-                  <h5 className="card-title">Active Users</h5>
-                  <div className="d-flex align-items-center">
-                    <div className="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i className="bi bi-person-check"></i>
-                    </div>
-                    <div className="ps-3">
-                      <h6>{statistics.activeUsers}</h6>
-                      <span className="text-success small pt-1 fw-bold">
-                        {statistics.totalEmployees > 0 ? ((statistics.activeUsers / statistics.totalEmployees) * 100).toFixed(1) : 0}%
-                      </span>
-                      <span className="text-muted small pt-2 ps-1">of total</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Users</p>
+                <p className="text-2xl font-bold text-gray-900">{statistics.activeUsers}</p>
+                <p className="text-sm text-green-600 font-medium">
+                  {statistics.totalEmployees > 0 ? ((statistics.activeUsers / statistics.totalEmployees) * 100).toFixed(1) : 0}% of total
+                </p>
               </div>
             </div>
+          </div>
 
-            <div className="col-xxl-3 col-md-6">
-              <div className="card info-card customers-card">
-                <div className="card-body">
-                  <h5 className="card-title">Inactive Users</h5>
-                  <div className="d-flex align-items-center">
-                    <div className="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i className="bi bi-person-x"></i>
-                    </div>
-                    <div className="ps-3">
-                      <h6>{statistics.inactiveUsers}</h6>
-                      <span className="text-danger small pt-1 fw-bold">
-                        {statistics.totalEmployees > 0 ? ((statistics.inactiveUsers / statistics.totalEmployees) * 100).toFixed(1) : 0}%
-                      </span>
-                      <span className="text-muted small pt-2 ps-1">of total</span>
-                    </div>
-                  </div>
+          {/* Inactive Users Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
                 </div>
               </div>
-            </div>
-
-            <div className="col-xxl-3 col-md-6">
-              <div className="card info-card">
-                <div className="card-body">
-                  <h5 className="card-title">Departments</h5>
-                  <div className="d-flex align-items-center">
-                    <div className="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i className="bi bi-building"></i>
-                    </div>
-                    <div className="ps-3">
-                      <h6>{statistics.departmentStats.length}</h6>
-                      <span className="text-muted small pt-2 ps-1">active departments</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Inactive Users</p>
+                <p className="text-2xl font-bold text-gray-900">{statistics.inactiveUsers}</p>
+                <p className="text-sm text-yellow-600 font-medium">
+                  {statistics.totalEmployees > 0 ? ((statistics.inactiveUsers / statistics.totalEmployees) * 100).toFixed(1) : 0}% of total
+                </p>
               </div>
             </div>
+          </div>
 
-            {/* Charts Row */}
-            <div className="col-lg-8">
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">Employees by Department</h5>
-                  {statistics.departmentStats.length > 0 ? (
-                    <Bar data={departmentChartData} options={chartOptions} />
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <i className="bi bi-bar-chart-line fs-1"></i>
-                      <p>No department data available</p>
-                    </div>
-                  )}
+          {/* Departments Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                 </div>
               </div>
-            </div>
-
-            <div className="col-lg-4">
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">Gender Distribution</h5>
-                  {statistics.genderStats.length > 0 ? (
-                    <Doughnut data={genderChartData} options={{ responsive: true }} />
-                  ) : (
-                    <div className="text-center text-muted py-4">
-                      <i className="bi bi-pie-chart fs-1"></i>
-                      <p>No gender data available</p>
-                    </div>
-                  )}
-                </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Departments</p>
+                <p className="text-2xl font-bold text-gray-900">{statistics.departmentStats.length}</p>
+                <p className="text-sm text-gray-500">active departments</p>
               </div>
-            </div>
-
-            {/* Recent Activities */}
-            <div className="col-lg-6">
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">Recent Activities</h5>
-                  <div className="activity">
-                    {recentActivities.length > 0 ? (
-                      recentActivities.map((activity, index) => (
-                        <div key={index} className="activity-item d-flex">
-                          <div className="activite-label">
-                            {new Date(activity.created_at).toLocaleDateString()}
-                          </div>
-                          <i className={`bi bi-circle-fill activity-badge ${
-                            activity.status === '1' ? 'text-success' : 'text-warning'
-                          } align-self-start`} />
-                          <div className="activity-content">
-                            Employee <a href="#" className="fw-bold text-dark">
-                              {activity.fname} {activity.lname}
-                            </a> {activity.activity_type === 'registration' ? 'registered' : 'updated'}.
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center text-muted py-4">
-                        <i className="bi bi-clock-history fs-1"></i>
-                        <p>No recent activities</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Latest Employees */}
-            <div className="col-lg-6">
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">Latest Employees</h5>
-                  <div className="table-responsive">
-                    <table className="table table-borderless">
-                      <thead>
-                        <tr>
-                          <th scope="col">Name</th>
-                          <th scope="col">Department</th>
-                          <th scope="col">Role</th>
-                          <th scope="col">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {employees.length > 0 ? (
-                          employees.map((employee) => (
-                            <tr key={employee.employee_id}>
-                              <td>{employee.fname} {employee.lname}</td>
-                              <td>{employee.department_name || 'N/A'}</td>
-                              <td>{employee.role_name || 'N/A'}</td>
-                              <td>
-                                <span className={`badge ${
-                                  employee.user_status === '1' ? 'bg-success' : 'bg-warning'
-                                }`}>
-                                  {employee.user_status === '1' ? 'Active' : 'Inactive'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan="4" className="text-center text-muted py-4">
-                              <i className="bi bi-people fs-1"></i>
-                              <p>No employees found</p>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="col-12">
-              <div className="card">
-                <div className="card-body">
-                  <h5 className="card-title">Quick Actions</h5>
-                  <div className="row">
-                    <div className="col-md-3">
-                      <button className="btn btn-primary w-100 mb-2">
-                        <i className="bi bi-person-plus me-2"></i>
-                        Add Employee
-                      </button>
-                    </div>
-                    <div className="col-md-3">
-                      <button className="btn btn-info w-100 mb-2">
-                        <i className="bi bi-table me-2"></i>
-                        View All Users
-                      </button>
-                    </div>
-                    <div className="col-md-3">
-                      <button className="btn btn-success w-100 mb-2">
-                        <i className="bi bi-file-earmark-excel me-2"></i>
-                        Export Data
-                      </button>
-                    </div>
-                    <div className="col-md-3">
-                      <button className="btn btn-warning w-100 mb-2">
-                        <i className="bi bi-gear me-2"></i>
-                        Settings
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             </div>
           </div>
         </div>
-      </main>
-    </>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Department Chart */}
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Employees by Department</h3>
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            </div>
+            {statistics.departmentStats.length > 0 ? (
+              <div className="h-80">
+                <Bar data={departmentChartData} options={{...chartOptions, maintainAspectRatio: false}} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-80 text-gray-500">
+                <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <p className="text-sm">No department data available</p>
+              </div>
+            )}
+          </div>
+
+          {/* Gender Distribution Chart */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Gender Distribution</h3>
+              <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+            </div>
+            {statistics.genderStats.length > 0 ? (
+              <div className="h-80 flex items-center justify-center">
+                <Doughnut data={genderChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-80 text-gray-500">
+                <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+                <p className="text-sm">No gender data available</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Recent Activities */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            </div>
+            <div className="space-y-4 max-h-80 overflow-y-auto">
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity, index) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+                    <div className="flex-shrink-0">
+                      <div className={`w-2 h-2 rounded-full mt-2 ${
+                        activity.status === '1' ? 'bg-green-500' : 'bg-yellow-500'
+                      }`}></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900">
+                        Employee <span className="font-semibold text-blue-600">
+                          {activity.fname} {activity.lname}
+                        </span> {activity.activity_type === 'registration' ? 'registered' : 'updated'}.
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(activity.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm">No recent activities</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Latest Employees */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Latest Employees</h3>
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            </div>
+            <div className="overflow-hidden">
+              {employees.length > 0 ? (
+                <div className="space-y-3">
+                  {employees.map((employee) => (
+                    <div key={employee.employee_id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-medium">
+                            {employee.fname.charAt(0)}{employee.lname.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {employee.fname} {employee.lname}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {employee.department_name || 'N/A'} • {employee.role_name || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        employee.user_status === '1' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {employee.user_status === '1' ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <p className="text-sm">No employees found</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+            <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Employee
+            </button>
+            <button className="flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              View All Users
+            </button>
+            <button className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export Data
+            </button>
+            <button className="flex items-center justify-center px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200 font-medium">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

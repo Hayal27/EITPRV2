@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import Axios from "axios";
-import "../../../assets/css/view.css";
 import happy from "../../../assets/img/happy.gif";
 import sad from "../../../assets/img/sad.gif";
 import debounce from "lodash.debounce";

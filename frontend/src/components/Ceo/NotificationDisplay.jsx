@@ -1,5 +1,4 @@
 import React from "react";
-import styles from "./StaffDashboard.module.css";
 
 const NotificationDisplay = () => {
   return (

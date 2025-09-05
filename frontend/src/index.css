@@ -1,47 +1,53 @@
-/* Professional Plan Steps - Global Overrides */
-.container.mt-46 {
-  margin-left: 0 !important;
-  padding: 0 !important;
-  max-width: none !important;
+@import "tailwindcss";
+
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Bootstrap Icons - Fallback and Enhancement */
+.bi {
+  display: inline-block;
+  font-family: 'bootstrap-icons' !important;
+  font-style: normal;
+  font-weight: normal !important;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: -0.125em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ensure Bootstrap doesn't interfere */
-.mt-46 .container {
-  margin: 0 !important;
-  padding: 0 !important;
-  max-width: none !important;
-}
-
-/* Professional Typography */
-.mt-46 {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  line-height: 1.6;
-}
-
-/* Button Visibility Fix - Global Override */
-.mt-46 button,
-.mt-46 .btn,
-.mt-46 input[type="button"],
-.mt-46 input[type="submit"] {
-  display: inline-block !important;
+/* Ensure Bootstrap Icons are visible */
+i.bi {
   visibility: visible !important;
   opacity: 1 !important;
-  position: relative !important;
-  z-index: 10 !important;
+  display: inline-block !important;
 }
 
-/* Ensure d-grid works properly */
-.mt-46 .d-grid {
-  display: grid !important;
+/* Bootstrap Icons size utilities */
+.bi-xs { font-size: 0.75rem; }
+.bi-sm { font-size: 0.875rem; }
+.bi-lg { font-size: 1.25rem; }
+.bi-xl { font-size: 1.5rem; }
+.bi-2x { font-size: 2rem; }
+.bi-3x { font-size: 3rem; }
+
+/* Fallback for when Bootstrap Icons don't load */
+.fallback-icon {
+  display: inline-block;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1;
+  vertical-align: -0.125em;
 }
 
-.mt-46 .d-grid .btn {
-  width: 100% !important;
-}
-body {
-  font-size: 0.8em; /* 80% of the parent (usually html) */
-}
-
-* {
-  font-size: inherit; /* Make sure all elements follow body size */
+/* Hide fallback when Bootstrap Icons are loaded */
+@supports (font-family: 'bootstrap-icons') {
+  .fallback-icon {
+    display: none;
+  }
 }

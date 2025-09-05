@@ -1,392 +1,752 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../Auths/AuthContex';
 import axios from 'axios';
-import './Sidebar.css';
-import { handleSidebarState, updateMainContentMargin } from './sidebarUtils';
+import logo from "../../assets/img/android-chrome-512x512-1.png";
 
-function Sidebar({ onSidebarToggle }) {
+function Sidebar() {
+  // Core state management
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hoveredItem, setHoveredItem] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredMenuItems, setFilteredMenuItems] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  const [theme, setTheme] = useState('light');
+  const [sidebarSettings, setSidebarSettings] = useState({
+    showIcons: true,
+    showBadges: true,
+    compactMode: false,
+    autoCollapse: false
+  });
+
+  // Refs
+  const sidebarRef = useRef(null);
+  const searchInputRef = useRef(null);
   const location = useLocation();
-  const { state } = useAuth();
+  const navigate = useNavigate();
+  const { state, dispatch } = useAuth();
 
-  // Fetch menu items based on user role
+  // Enhanced responsive detection
   useEffect(() => {
-    const fetchMenuItems = async () => {
-      console.log('🔍 Sidebar: Starting menu fetch process...');
-      console.log('🔍 Sidebar: Auth state:', state);
-      console.log('🔍 Sidebar: User ID:', state.user);
-      console.log('🔍 Sidebar: Role ID:', state.role_id);
-      console.log('🔍 Sidebar: Is Authenticated:', state.isAuthenticated);
-
-      // First test the API connection
-      try {
-        console.log('🧪 Sidebar: Testing API connection...');
-        const testResponse = await axios.get('http://localhost:5000/api/menu-permissions/test');
-        console.log('✅ Sidebar: API test successful:', testResponse.data);
-      } catch (testErr) {
-        console.error('💥 Sidebar: API test failed:', testErr);
-      }
-
-      try {
-        if (state.user && state.role_id && state.isAuthenticated) {
-          console.log('✅ Sidebar: User and role_id found, proceeding with fetch');
-          setLoading(true);
-          setError(null);
-
-          const apiUrl = `http://localhost:5000/api/menu-permissions/user-permissions/${state.role_id}`;
-          console.log('🌐 Sidebar: Making API call to:', apiUrl);
-
-          const response = await axios.get(apiUrl);
-
-          console.log('📡 Sidebar: API Response received:', response);
-          console.log('📡 Sidebar: Response status:', response.status);
-          console.log('📡 Sidebar: Response data:', response.data);
-
-          if (response.data && response.data.success) {
-            console.log('✅ Sidebar: API call successful');
-            console.log('📋 Sidebar: Menu items received:', response.data.data);
-            console.log('📋 Sidebar: Number of menu items:', response.data.data?.length);
-
-            setMenuItems(response.data.data);
-            setError(null);
-          } else {
-            console.error('❌ Sidebar: API call failed - success flag is false');
-            console.error('❌ Sidebar: Response data:', response.data);
-            setError(`API Error: ${response.data?.message || 'Unknown error'}`);
-          }
-        } else {
-          console.warn('⚠️ Sidebar: Missing user or role_id');
-          console.warn('⚠️ Sidebar: state.user:', state.user);
-          console.warn('⚠️ Sidebar: state.role_id:', state.role_id);
-          console.warn('⚠️ Sidebar: state.isAuthenticated:', state.isAuthenticated);
-          setError('User authentication data missing');
-        }
-      } catch (err) {
-        console.error('💥 Sidebar: Error fetching menu items:', err);
-        console.error('💥 Sidebar: Error message:', err.message);
-        console.error('💥 Sidebar: Error response:', err.response);
-        console.error('💥 Sidebar: Error response data:', err.response?.data);
-        console.error('💥 Sidebar: Error response status:', err.response?.status);
-        console.error('💥 Sidebar: Error stack:', err.stack);
-
-        let errorMessage = 'Failed to load menu items';
-        if (err.response) {
-          errorMessage = `API Error ${err.response.status}: ${err.response.data?.message || err.message}`;
-        } else if (err.request) {
-          errorMessage = 'Network Error: Unable to reach server';
-        } else {
-          errorMessage = `Request Error: ${err.message}`;
-        }
-
-        setError(errorMessage);
-      } finally {
-        console.log('🏁 Sidebar: Fetch process completed');
-        setLoading(false);
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 1024; // Changed from 768 to 1024 for better tablet support
+      const tablet = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      
+      // Auto-collapse on mobile and tablet
+      if (tablet && !isCollapsed) {
+        setIsCollapsed(true);
       }
     };
 
-    console.log('🚀 Sidebar: useEffect triggered');
-    fetchMenuItems();
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [isCollapsed]);
+
+  // Fetch user profile and notifications
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        if (state.user && state.isAuthenticated) {
+          // Fetch user profile
+          const profileResponse = await axios.get(`http://localhost:5000/api/user/profile/${state.user}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          
+          if (profileResponse.data.success) {
+            setUserProfile(profileResponse.data.user);
+          }
+
+          // Fetch notifications
+          const notificationResponse = await axios.get(`http://localhost:5000/api/notifications/${state.user}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          
+          if (notificationResponse.data.success) {
+            setNotifications(notificationResponse.data.notifications.slice(0, 5));
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch user data:', err.message);
+      }
+    };
+
+    fetchUserData();
+  }, [state.user, state.isAuthenticated]);
+
+  // Enhanced menu fetching with caching
+  const fetchMenuItems = useCallback(async () => {
+    try {
+      if (state.user && state.role_id && state.isAuthenticated) {
+        setLoading(true);
+        setError(null);
+
+        // Check cache first
+        const cacheKey = `menu_items_${state.role_id}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+        
+        // Use cache if less than 5 minutes old
+        if (cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 300000) {
+          const parsedData = JSON.parse(cachedData);
+          setMenuItems(parsedData);
+          setFilteredMenuItems(parsedData);
+          setLoading(false);
+          return;
+        }
+
+        const apiUrl = `http://localhost:5000/api/menu-permissions/user-permissions/${state.role_id}`;
+        const response = await axios.get(apiUrl, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          timeout: 10000
+        });
+
+        if (response.data && response.data.success) {
+          const menuData = response.data.data;
+          setMenuItems(menuData);
+          setFilteredMenuItems(menuData);
+          
+          // Cache the data
+          localStorage.setItem(cacheKey, JSON.stringify(menuData));
+          localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+          
+          setError(null);
+        } else {
+          throw new Error(response.data?.message || 'Failed to load menu items');
+        }
+      } else {
+        throw new Error('Authentication data missing');
+      }
+    } catch (err) {
+      let errorMessage = 'Failed to load menu items';
+      if (err.response) {
+        errorMessage = `Server Error ${err.response.status}: ${err.response.data?.message || err.message}`;
+      } else if (err.request) {
+        errorMessage = 'Network Error: Unable to reach server';
+      } else {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+      console.error('Menu fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [state.user, state.role_id, state.isAuthenticated]);
 
-  // Enhanced toggle function that also handles submenus
-  const handleToggleSidebar = () => {
+  useEffect(() => {
+    fetchMenuItems();
+  }, [fetchMenuItems]);
+
+  // Advanced search functionality
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredMenuItems(menuItems);
+      return;
+    }
+
+    const searchLower = searchQuery.toLowerCase();
+    const filtered = menuItems.filter(item => {
+      // Search in main item
+      if (item.name.toLowerCase().includes(searchLower)) return true;
+      
+      // Search in children
+      if (item.children && item.children.length > 0) {
+        return item.children.some(child => 
+          child.name.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return false;
+    }).map(item => {
+      // If main item matches, return as is
+      if (item.name.toLowerCase().includes(searchLower)) {
+        return item;
+      }
+      
+      // If children match, return item with filtered children
+      if (item.children && item.children.length > 0) {
+        return {
+          ...item,
+          children: item.children.filter(child => 
+            child.name.toLowerCase().includes(searchLower)
+          )
+        };
+      }
+      
+      return item;
+    });
+
+    setFilteredMenuItems(filtered);
+  }, [searchQuery, menuItems]);
+
+  // Enhanced sidebar toggle with animations
+  const handleToggleSidebar = useCallback(() => {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
 
-    // Close all submenus when collapsing
+    // Close search and submenus when collapsing
     if (newCollapsedState) {
       setActiveSubmenu(null);
+      setSearchQuery('');
+      setIsSearchFocused(false);
     }
 
-    // Update body class and main content margin
-    handleSidebarState(newCollapsedState);
-
-    // Notify parent component about sidebar state change
-    if (onSidebarToggle) {
-      onSidebarToggle({
-        isCollapsed: newCollapsedState,
-        sidebarWidth: newCollapsedState ? 70 : 280,
-        mainContentMargin: newCollapsedState ? 70 : 280
-      });
+    // Update main content margin with smooth transition
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      
+      if (isMobile) {
+        mainContent.style.marginLeft = '0px';
+      } else {
+        mainContent.style.marginLeft = newCollapsedState ? '80px' : '320px';
+      }
     }
 
-    // Dispatch custom event for other components to listen
-    const sidebarEvent = new CustomEvent('sidebarStateChange', {
-      detail: {
+    // Dispatch custom event for other components
+    window.dispatchEvent(new CustomEvent('sidebarToggle', {
+      detail: { 
         isCollapsed: newCollapsedState,
-        sidebarWidth: newCollapsedState ? 70 : 280,
-        mainContentMargin: newCollapsedState ? 70 : 280,
+        width: newCollapsedState ? 80 : 320,
         timestamp: Date.now()
       }
-    });
-    window.dispatchEvent(sidebarEvent);
-  };
+    }));
 
-  // Toggle submenu
-  const toggleSubmenu = (menuId) => {
-    if (isCollapsed) return; // Don't open submenus when collapsed
-    setActiveSubmenu(activeSubmenu === menuId ? null : menuId);
-  };
+    // Save preference
+    localStorage.setItem('sidebar_collapsed', newCollapsedState.toString());
+  }, [isCollapsed, isMobile]);
 
-  // Check if current path matches the link
-  const isActiveLink = (path) => {
-    return location.pathname === path;
-  };
-
-  // Auto-collapse on mobile and handle responsive behavior
+  // Load saved preferences
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth <= 768) {
-        setIsCollapsed(true);
-        handleSidebarState(true);
+    const savedCollapsed = localStorage.getItem('sidebar_collapsed');
+    const savedTheme = localStorage.getItem('sidebar_theme');
+    const savedSettings = localStorage.getItem('sidebar_settings');
 
-        // Notify about mobile collapse
-        if (onSidebarToggle) {
-          onSidebarToggle({
-            isCollapsed: true,
-            sidebarWidth: 70,
-            mainContentMargin: 0 // No margin on mobile
-          });
+    if (savedCollapsed !== null) {
+      setIsCollapsed(savedCollapsed === 'true');
+    }
+    
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+    
+    if (savedSettings) {
+      setSidebarSettings(JSON.parse(savedSettings));
+    }
+  }, []);
+
+  // Enhanced submenu toggle
+  const toggleSubmenu = useCallback((menuId) => {
+    if (isCollapsed) return;
+    setActiveSubmenu(current => current === menuId ? null : menuId);
+  }, [isCollapsed]);
+
+  // Check if current path matches
+  const isActiveLink = useCallback((path) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  }, [location.pathname]);
+
+  // Handle logout
+  const handleLogout = useCallback(async () => {
+    try {
+      await axios.post('http://localhost:5000/api/logout', {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+    } catch (err) {
+      console.warn('Logout API call failed:', err.message);
+    } finally {
+      // Clear all data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('menu_items_')) {
+          localStorage.removeItem(key);
         }
-      } else {
-        // Update margin based on current state
-        updateMainContentMargin(isCollapsed);
+      });
+      
+      dispatch({ type: 'LOGOUT' });
+      navigate('/login');
+    }
+  }, [dispatch, navigate]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ctrl/Cmd + B to toggle sidebar
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+      
+      // Ctrl/Cmd + K to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        if (!isCollapsed && searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }
+      
+      // Escape to close search
+      if (e.key === 'Escape' && isSearchFocused) {
+        setSearchQuery('');
+        setIsSearchFocused(false);
+        searchInputRef.current?.blur();
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Check on initial load
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [handleToggleSidebar, isCollapsed, isSearchFocused]);
 
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isCollapsed, onSidebarToggle]);
-
-  // Initial setup
+  // Click outside to close on mobile and handle mobile toggle
   useEffect(() => {
-    handleSidebarState(isCollapsed);
-  }, []);
+    const handleClickOutside = (event) => {
+      if (isMobile && !isCollapsed && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setIsCollapsed(true);
+      }
+    };
 
-  // Render menu item recursively
-  const renderMenuItem = (item) => {
+    const handleMobileToggle = () => {
+      if (isMobile) {
+        setIsCollapsed(!isCollapsed);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('toggleMobileSidebar', handleMobileToggle);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('toggleMobileSidebar', handleMobileToggle);
+    };
+  }, [isMobile, isCollapsed]);
+
+  // Enhanced menu item renderer
+  const renderMenuItem = useCallback((item) => {
     const hasChildren = item.children && item.children.length > 0;
     const isActive = isActiveLink(item.path);
     const isSubmenuActive = activeSubmenu === item.id;
+    const isHovered = hoveredItem === item.id;
 
     if (hasChildren) {
       return (
-        <li key={item.id} className="as-nav-item">
+        <li key={item.id} className="group">
           <div
-            className={`as-nav-link as-submenu-toggle ${isSubmenuActive ? 'as-active' : ''}`}
+            className={`relative flex items-center px-3 py-3 mx-2 rounded-xl cursor-pointer transition-all duration-300 ease-out ${
+              isSubmenuActive 
+                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-lg shadow-blue-100/50 scale-[1.02]' 
+                : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-slate-50 hover:text-gray-900 hover:shadow-md hover:scale-[1.01]'
+            }`}
             onClick={() => toggleSubmenu(item.id)}
+            onMouseEnter={() => setHoveredItem(item.id)}
+            onMouseLeave={() => setHoveredItem(null)}
             title={isCollapsed ? item.name : ""}
           >
-            <i className={`${item.icon} as-nav-icon`}></i>
+            {/* Enhanced icon with badge support */}
+            <div className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 ${
+              isSubmenuActive 
+                ? 'bg-blue-100 text-blue-600 shadow-md' 
+                : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700 group-hover:shadow-sm'
+            }`}>
+              <i className={`${item.icon} text-base`}></i>
+              {sidebarSettings.showBadges && item.badge && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                  {item.badge}
+                </span>
+              )}
+            </div>
+            
             {!isCollapsed && (
               <>
-                <span className="as-nav-text">{item.name}</span>
-                <i className={`bi bi-chevron-${isSubmenuActive ? 'up' : 'down'} as-submenu-arrow`}></i>
+                <span className="ml-3 text-sm font-semibold tracking-wide flex-1">{item.name}</span>
+                <div className={`transition-transform duration-300 ${isSubmenuActive ? 'rotate-180' : ''}`}>
+                  <i className="bi bi-chevron-down text-xs"></i>
+                </div>
               </>
+            )}
+            
+            {/* Active indicator */}
+            {isSubmenuActive && (
+              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-400 to-blue-600 rounded-r-full"></div>
+            )}
+
+            {/* Tooltip for collapsed state */}
+            {isCollapsed && isHovered && (
+              <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 whitespace-nowrap">
+                {item.name}
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+              </div>
             )}
           </div>
 
+          {/* Enhanced submenu with smooth animations */}
           {!isCollapsed && (
-            <ul className={`as-submenu ${isSubmenuActive ? 'as-show' : ''}`}>
-              {item.children.map(child => (
-                <li key={child.id} className="as-submenu-item">
-                  <Link
-                    to={child.path}
-                    className={`as-submenu-link ${isActiveLink(child.path) ? 'as-active' : ''}`}
-                  >
-                    <i className={`${child.icon} as-submenu-icon`}></i>
-                    <span>{child.name}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <div className={`overflow-hidden transition-all duration-500 ease-out ${
+              isSubmenuActive ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}>
+              <ul className="mt-2 ml-6 space-y-1 border-l-2 border-gray-100 pl-4">
+                {item.children.map(child => (
+                  <li key={child.id}>
+                    <Link
+                      to={child.path}
+                      className={`flex items-center px-3 py-2.5 mx-2 rounded-lg text-sm transition-all duration-300 ease-out ${
+                        isActiveLink(child.path) 
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200/50 font-semibold scale-[1.02]' 
+                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-gray-100 hover:to-slate-100 hover:text-gray-800 hover:scale-[1.01]'
+                      }`}
+                    >
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-lg mr-3 transition-all duration-300 ${
+                        isActiveLink(child.path) 
+                          ? 'bg-white/20 text-white shadow-sm' 
+                          : 'bg-gray-200 text-gray-400 group-hover:bg-gray-300'
+                      }`}>
+                        <i className={`${child.icon} text-xs`}></i>
+                      </div>
+                      <span className="font-medium flex-1">{child.name}</span>
+                      
+                      {/* Badge for submenu items */}
+                      {sidebarSettings.showBadges && child.badge && (
+                        <span className={`px-2 py-1 text-xs rounded-full font-bold ${
+                          isActiveLink(child.path) 
+                            ? 'bg-white/20 text-white' 
+                            : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {child.badge}
+                        </span>
+                      )}
+                      
+                      {/* Active indicator */}
+                      {isActiveLink(child.path) && (
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </li>
       );
     } else {
       return (
-        <li key={item.id} className="as-nav-item">
+        <li key={item.id} className="group">
           <Link
             to={item.path}
-            className={`as-nav-link ${isActive ? 'as-active' : ''}`}
+            className={`relative flex items-center px-3 py-3 mx-2 rounded-xl transition-all duration-300 ease-out ${
+              isActive 
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200/50 scale-[1.02]' 
+                : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-slate-50 hover:text-gray-900 hover:shadow-md hover:scale-[1.01]'
+            }`}
             title={isCollapsed ? item.name : ""}
+            onMouseEnter={() => setHoveredItem(item.id)}
+            onMouseLeave={() => setHoveredItem(null)}
           >
-            <i className={`${item.icon} as-nav-icon`}></i>
-            {!isCollapsed && <span className="as-nav-text">{item.name}</span>}
+            {/* Enhanced icon */}
+            <div className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 ${
+              isActive 
+                ? 'bg-white/20 text-white shadow-md' 
+                : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700 group-hover:shadow-sm'
+            }`}>
+              <i className={`${item.icon} text-base`}></i>
+              {sidebarSettings.showBadges && item.badge && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                  {item.badge}
+                </span>
+              )}
+            </div>
+            
+            {!isCollapsed && (
+              <>
+                <span className="ml-3 text-sm font-semibold tracking-wide flex-1">{item.name}</span>
+                {sidebarSettings.showBadges && item.badge && (
+                  <span className={`px-2 py-1 text-xs rounded-full font-bold ${
+                    isActive 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
+              </>
+            )}
+            
+            {/* Active indicator */}
+            {isActive && (
+              <>
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"></div>
+                {!isCollapsed && (
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                )}
+              </>
+            )}
+
+            {/* Tooltip for collapsed state */}
+            {isCollapsed && isHovered && (
+              <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 whitespace-nowrap">
+                {item.name}
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+              </div>
+            )}
           </Link>
         </li>
       );
     }
-  };
+  }, [isCollapsed, activeSubmenu, hoveredItem, isActiveLink, toggleSubmenu, sidebarSettings]);
 
-  // Show loading state
+  // Loading state
   if (loading) {
-    console.log('⏳ Sidebar: Rendering loading state');
     return (
       <>
-        {/* Sidebar Toggle Button */}
+        {/* Toggle Button - Positioned below header */}
         <button
-          className="as-sidebar-toggle-btn"
+          className={`fixed top-20 lg:top-24 z-50 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center text-gray-600 hover:bg-white hover:border-gray-300 hover:text-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+            isCollapsed ? 'left-4 lg:left-6' : 'left-4 lg:left-6'
+          }`}
           onClick={handleToggleSidebar}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
+          <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'} text-sm lg:text-base`}></i>
         </button>
 
-        <aside className={`as-professional-sidebar ${isCollapsed ? 'as-collapsed' : 'as-expanded'}`}>
-          <div className="as-sidebar-header">
-            <div className="as-sidebar-brand">
-              <i className="bi bi-shield-check as-brand-icon"></i>
-              {!isCollapsed && <span className="as-brand-text">Loading...</span>}
-            </div>
-          </div>
-          <nav className="as-sidebar-nav">
-            <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
-              <div className="spinner-border text-secondary" role="status">
-                <span className="visually-hidden">Loading menu...</span>
-              </div>
-            </div>
-            {!isCollapsed && (
-              <div className="text-center p-3">
-                <small className="text-muted">
-                  Loading menu for role: {state.role_id || 'Unknown'}
-                </small>
-              </div>
-            )}
-          </nav>
-        </aside>
-      </>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    console.error('🚨 Sidebar: Rendering error state:', error);
-    return (
-      <>
-        {/* Sidebar Toggle Button */}
-        <button
-          className="as-sidebar-toggle-btn"
-          onClick={handleToggleSidebar}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        <aside 
+          ref={sidebarRef}
+          className={`fixed top-16 lg:top-20 left-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] bg-white/95 backdrop-blur-xl border-r border-gray-200 z-40 transition-all duration-500 ease-out shadow-2xl ${
+            isCollapsed ? 'w-16 lg:w-20' : 'w-72 lg:w-80'
+          }`}
         >
-          <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
-        </button>
-
-        <aside className={`as-professional-sidebar ${isCollapsed ? 'as-collapsed' : 'as-expanded'}`}>
-          <div className="as-sidebar-header">
-            <div className="as-sidebar-brand">
-              <i className="bi bi-exclamation-triangle as-brand-icon text-warning"></i>
-              {!isCollapsed && <span className="as-brand-text">Menu Error</span>}
-            </div>
-          </div>
-          <nav className="as-sidebar-nav">
-            <div className="p-3">
-              <div className="alert alert-warning">
-                <i className="bi bi-exclamation-triangle me-2"></i>
-                <strong>Menu Loading Error</strong>
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="px-6 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50">
+              <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                  <div className="w-6 h-6 bg-white/20 rounded animate-pulse"></div>
+                </div>
                 {!isCollapsed && (
-                  <>
-                    <p className="small mt-2 mb-1">{error}</p>
-                    <hr />
-                    <p className="small mb-1"><strong>Debug Info:</strong></p>
-                    <p className="small mb-1">User ID: {state.user || 'Not found'}</p>
-                    <p className="small mb-1">Role ID: {state.role_id || 'Not found'}</p>
-                    <p className="small mb-1">Auth State: {state.isAuthenticated ? 'Authenticated' : 'Not authenticated'}</p>
-                    <p className="small mb-1">User Name: {state.user_name || 'Not found'}</p>
-                    <button
-                      className="btn btn-sm btn-outline-warning mt-2"
-                      onClick={() => window.location.reload()}
-                    >
-                      Reload Page
-                    </button>
-                  </>
+                  <div className="ml-4">
+                    <div className="h-5 bg-gray-300 rounded animate-pulse mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded animate-pulse w-20"></div>
+                  </div>
                 )}
               </div>
             </div>
-          </nav>
+
+            {/* Loading content */}
+            <div className="flex-1 flex flex-col justify-center items-center p-6">
+              <div className="relative mb-4">
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent absolute top-0 left-0"></div>
+              </div>
+              {!isCollapsed && (
+                <div className="text-center">
+                  <p className="text-gray-600 font-medium">Loading menu...</p>
+                  <p className="text-gray-400 text-sm mt-1">Please wait</p>
+                </div>
+              )}
+            </div>
+          </div>
         </aside>
       </>
     );
   }
 
-  // Log final render state
-  console.log('🎨 Sidebar: Rendering main sidebar');
-  console.log('🎨 Sidebar: Menu items count:', menuItems?.length || 0);
-  console.log('🎨 Sidebar: Menu items:', menuItems);
-  console.log('🎨 Sidebar: Loading state:', loading);
-  console.log('🎨 Sidebar: Error state:', error);
+  // Error state
+  if (error) {
+    return (
+      <>
+        {/* Toggle Button - Positioned below header */}
+        <button
+          className={`fixed top-20 lg:top-24 z-50 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center text-gray-600 hover:bg-white hover:border-gray-300 hover:text-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+            isCollapsed ? 'left-4 lg:left-6' : 'left-4 lg:left-6'
+          }`}
+          onClick={handleToggleSidebar}
+        >
+          <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'} text-sm lg:text-base`}></i>
+        </button>
+
+        <aside 
+          ref={sidebarRef}
+          className={`fixed top-16 lg:top-20 left-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] bg-white/95 backdrop-blur-xl border-r border-gray-200 z-40 transition-all duration-500 ease-out shadow-2xl ${
+            isCollapsed ? 'w-16 lg:w-20' : 'w-72 lg:w-80'
+          }`}
+        >
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="px-6 py-6 border-b border-red-200 bg-gradient-to-r from-red-50 to-orange-50">
+              <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl shadow-lg">
+                  <i className="bi bi-exclamation-triangle text-white text-xl"></i>
+                </div>
+                {!isCollapsed && (
+                  <div className="ml-4">
+                    <h1 className="text-lg font-bold text-red-700">Error</h1>
+                    <p className="text-sm text-red-500">Failed to load</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Error content */}
+            <div className="flex-1 p-6">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                <div className="flex items-start">
+                  <i className="bi bi-exclamation-triangle text-red-500 text-lg mr-3 mt-1"></i>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-red-800 mb-2">Menu Loading Failed</h3>
+                    {!isCollapsed && (
+                      <>
+                        <p className="text-red-700 text-sm mb-4">{error}</p>
+                        <button
+                          onClick={fetchMenuItems}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors duration-200"
+                        >
+                          Retry
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </>
+    );
+  }
 
   return (
     <>
-      {/* Sidebar Toggle Button */}
+      {/* Professional Toggle Button - Positioned below header */}
       <button
-        className="as-sidebar-toggle-btn"
+        className={`fixed top-20 lg:top-24 z-50 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center text-gray-600 hover:bg-white hover:border-gray-300 hover:text-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${
+          isCollapsed ? 'left-4 lg:left-6' : 'left-4 lg:left-6'
+        }`}
         onClick={handleToggleSidebar}
-        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        title={`${isCollapsed ? 'Expand' : 'Collapse'} Sidebar (Ctrl+B)`}
       >
-        <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
+        <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'} text-sm lg:text-base transition-transform duration-300`}></i>
       </button>
 
-      {/* Sidebar */}
-      <aside className={`as-professional-sidebar ${isCollapsed ? 'as-collapsed' : 'as-expanded'}`}>
-        {/* Sidebar Header */}
-        <div className="as-sidebar-header">
-          <div className="as-sidebar-brand">
-            <i className="bi bi-shield-check as-brand-icon"></i>
-            {!isCollapsed && <span className="as-brand-text">Admin Panel</span>}
-          </div>
-        </div>
+      {/* Professional Sidebar - Positioned below header */}
+      <aside 
+        ref={sidebarRef}
+        className={`fixed top-16 lg:top-20 left-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] bg-white/95 backdrop-blur-xl border-r border-gray-200 z-40 transition-all duration-500 ease-out shadow-2xl ${
+          isCollapsed ? 'w-16 lg:w-20' : 'w-72 lg:w-80'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Premium Header */}
+    
 
-        {/* Sidebar Navigation */}
-        <nav className="as-sidebar-nav">
-          <ul className="as-nav-list">
-            {menuItems && menuItems.length > 0 ? (
-              menuItems.map(item => {
-                console.log('🔧 Sidebar: Rendering menu item:', item);
-                return renderMenuItem(item);
-              })
-            ) : (
-              <li className="as-nav-item">
-                <div className="p-3 text-center">
-                  <i className="bi bi-info-circle text-info"></i>
+          {/* Search Bar */}
+          {!isCollapsed && (
+            <div className="px-4 py-4 border-b border-gray-100">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="bi bi-search text-gray-400"></i>
+                </div>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search menu... (Ctrl+K)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <i className="bi bi-x text-sm"></i>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Menu */}
+          <nav className="flex-1 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <ul className="space-y-2">
+              {filteredMenuItems && filteredMenuItems.length > 0 ? (
+                filteredMenuItems.map(item => renderMenuItem(item))
+              ) : (
+                <li className="p-8 text-center">
+                  <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl mx-auto mb-4">
+                    <i className="bi bi-inbox text-blue-500 text-3xl"></i>
+                  </div>
                   {!isCollapsed && (
-                    <div className="mt-2">
-                      <p className="small text-muted mb-1">No menu items found</p>
-                      <p className="small text-muted mb-1">Role ID: {state.role_id}</p>
-                      <p className="small text-muted">Check permissions</p>
+                    <div>
+                      <p className="font-semibold text-gray-600 mb-2">
+                        {searchQuery ? 'No results found' : 'No menu items'}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {searchQuery ? 'Try a different search term' : 'Contact administrator for access'}
+                      </p>
                     </div>
                   )}
-                </div>
-              </li>
-            )}
-          </ul>
-        </nav>
+                </li>
+              )}
+            </ul>
+          </nav>
 
-        {/* Sidebar Footer */}
-        {!isCollapsed && (
-          <div className="as-sidebar-footer">
-            <div className="as-footer-content">
-              <small className="text-muted">ITPC Plan and Reporting v2.0</small>
+          {/* User Profile Section */}
+          {!isCollapsed && userProfile && (
+            <div className="px-4 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50">
+              <div className="flex items-center">
+                <div className="relative">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+                    {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                </div>
+                <div className="ml-3 flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">
+                    {userProfile.name || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {userProfile.role || 'Role'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                  title="Logout"
+                >
+                  <i className="bi bi-box-arrow-right text-sm"></i>
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Footer */}
+          {!isCollapsed && (
+            <div className="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50">
+              <div className="text-center">
+                <p className="text-xs font-medium bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent">
+                  ITPC Plan & Reporting v2.0
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Professional Edition</p>
+              </div>
+            </div>
+          )}
+        </div>
       </aside>
 
-      {/* Overlay for mobile */}
-      {!isCollapsed && (
+      {/* Mobile Overlay */}
+      {isMobile && !isCollapsed && (
         <div
-          className="as-sidebar-overlay d-md-none"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 transition-all duration-300"
           onClick={() => setIsCollapsed(true)}
-        ></div>
+        />
       )}
     </>
   );

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import styles from "./StaffDashboard.module.css";
 
 /**
  * DashboardViewSelector provides a UI to select which types of content to display:

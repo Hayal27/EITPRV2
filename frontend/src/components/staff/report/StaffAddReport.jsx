@@ -3,7 +3,6 @@ import Axios from "axios";
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilePdf, faFileWord, faFileImage, faFileAlt, faPaperclip } from "@fortawesome/free-solid-svg-icons";
-// import '../../../assets/css/planform.css';
 
 const StaffAddReport = () => {
   // State to hold form data

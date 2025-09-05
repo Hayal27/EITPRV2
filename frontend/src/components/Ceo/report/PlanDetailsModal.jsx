@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { motion } from "framer-motion";
-import'../../../assets/css/Dashboard.css'
 
 const PlanDetailsModal = ({ data, closeModal }) => {
   // Convert plan type to lowercase or default to "default"

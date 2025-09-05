@@ -5,7 +5,6 @@ import Step2Objective from "./Step2Objective"; // Objective selection step
 import Step3SpecificObjective from "./Step3SpecificObjective"; // Specific objective selection
 import Step4SpecificObjectiveDetails from "./Step4SpecificObjectiveDetails"; // Specific objective details
 import Step5Review from "./Step5Review"; // Review and submission step
-import "../../../../assets/css/objective.css";
 import Swal from "sweetalert2"; // SweetAlert2 for popups
 
 const PlanSteps = () => {

@@ -19,11 +19,13 @@ import {
   faClockRotateLeft,
   faEye,
   faList,
-  faHistory
+  faHistory,
+  faBullseye,
+  faTasks,
+  faListCheck
 } from "@fortawesome/free-solid-svg-icons";
-import "../../../../assets/css/objective.css";
-import "./ModernPlanSteps.css";
 import ApprovalHistory from "../ApprovalHistory";
+import "./StafPlanSteps.css";
 
 const StafPlanSteps = () => {
   // Main state management
@@ -139,8 +141,8 @@ const StafPlanSteps = () => {
   // Sidebar state management
   const [sidebarState, setSidebarState] = useState({
     isCollapsed: false,
-    sidebarWidth: 260,
-    mainContentMargin: 260
+    sidebarWidth: 280, // Reduced from 320
+    mainContentMargin: 280 // Reduced from 320
   });
 
   // Data fetching functions
@@ -452,7 +454,8 @@ const StafPlanSteps = () => {
   const handleDetailsModalClose = () => {
     if (specificObjectiveDetails.length > 0) {
       setShowDetailsModal(false);
-      setCurrentStep('form');
+      // Directly submit the plan instead of going to a form step
+      handleFormSubmit();
     } else {
       Swal.fire("Warning", "Please add at least one detail before proceeding.", "warning");
     }
@@ -528,44 +531,123 @@ const StafPlanSteps = () => {
 
   // Sidebar state management
   useEffect(() => {
-    const handleSidebarStateChange = (event) => {
-      const { isCollapsed, sidebarWidth, mainContentMargin } = event.detail;
+    const handleSidebarToggle = (event) => {
+      const { isCollapsed, width } = event.detail;
       const isMobile = window.innerWidth <= 768;
-      const adjustedMargin = isMobile ? 0 : mainContentMargin;
-
+      
+      console.log('Staff Plan Steps - Sidebar toggle event:', { isCollapsed, width, isMobile }); // Debug log
+      
       setSidebarState({
         isCollapsed,
-        sidebarWidth,
-        mainContentMargin: adjustedMargin
+        sidebarWidth: width,
+        mainContentMargin: isMobile ? 0 : width
       });
     };
 
-    const handleResize = () => {
+    // More aggressive sidebar detection
+    const detectSidebarState = () => {
+      const savedCollapsed = localStorage.getItem('sidebar_collapsed');
       const isMobile = window.innerWidth <= 768;
-      if (isMobile) {
-        setSidebarState(prev => ({ ...prev, mainContentMargin: 0 }));
+      
+      // Try multiple selectors to find the sidebar
+      const sidebarSelectors = [
+        'aside[class*="sidebar"]',
+        '.sidebar',
+        '#sidebar',
+        'aside.sidebar',
+        '[data-sidebar]'
+      ];
+      
+      let sidebarElement = null;
+      for (const selector of sidebarSelectors) {
+        sidebarElement = document.querySelector(selector);
+        if (sidebarElement) break;
+      }
+      
+      let actualWidth = 280; // Reduced default expanded width
+      let collapsedWidth = 80; // default collapsed width
+      
+      if (sidebarElement) {
+        const computedStyle = window.getComputedStyle(sidebarElement);
+        const currentWidth = parseInt(computedStyle.width) || 280;
+        
+        // Determine if currently collapsed based on width
+        const isCurrentlyCollapsed = currentWidth < 150; // threshold
+        // Use more reasonable widths
+        actualWidth = isCurrentlyCollapsed ? 280 : Math.min(currentWidth, 280);
+        collapsedWidth = isCurrentlyCollapsed ? currentWidth : 80;
+        
+        console.log('Staff Plan Steps - Detected sidebar:', { 
+          currentWidth, 
+          isCurrentlyCollapsed, 
+          actualWidth, 
+          collapsedWidth 
+        });
+      }
+      
+      if (savedCollapsed !== null) {
+        const isCollapsed = savedCollapsed === 'true';
+        const width = isCollapsed ? collapsedWidth : actualWidth;
+        
+        console.log('Staff Plan Steps - Setting initial state:', { 
+          isCollapsed, 
+          width, 
+          actualWidth, 
+          collapsedWidth, 
+          isMobile 
+        });
+        
+        setSidebarState({
+          isCollapsed,
+          sidebarWidth: width,
+          mainContentMargin: isMobile ? 0 : width
+        });
       } else {
-        setSidebarState(prev => ({
-          ...prev,
-          mainContentMargin: prev.isCollapsed ?
-            (prev.sidebarWidth === 70 ? 70 : 60) :
-            (prev.sidebarWidth === 280 ? 280 : 260)
-        }));
+        // No saved state, detect current state
+        const currentWidth = sidebarElement ? parseInt(window.getComputedStyle(sidebarElement).width) : actualWidth;
+        const isCollapsed = currentWidth < 150;
+        
+        setSidebarState({
+          isCollapsed,
+          sidebarWidth: currentWidth,
+          mainContentMargin: isMobile ? 0 : currentWidth
+        });
       }
     };
 
-    window.addEventListener('sidebarStateChange', handleSidebarStateChange);
-    window.addEventListener('staffSidebarStateChange', handleSidebarStateChange);
-    window.addEventListener('ceoSidebarStateChange', handleSidebarStateChange);
+    // Listen for sidebar toggle events
+    window.addEventListener('sidebarToggle', handleSidebarToggle);
+
+    // Initial detection with delay to ensure DOM is ready
+    setTimeout(detectSidebarState, 100);
+    
+    // Also detect on DOM changes
+    const observer = new MutationObserver(() => {
+      setTimeout(detectSidebarState, 50);
+    });
+    
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true, 
+      attributes: true, 
+      attributeFilter: ['class', 'style'] 
+    });
+
+    // Handle window resize
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      setSidebarState(prev => ({
+        ...prev,
+        mainContentMargin: isMobile ? 0 : prev.sidebarWidth
+      }));
+    };
+
     window.addEventListener('resize', handleResize);
 
-    handleResize();
-
     return () => {
-      window.removeEventListener('sidebarStateChange', handleSidebarStateChange);
-      window.removeEventListener('staffSidebarStateChange', handleSidebarStateChange);
-      window.removeEventListener('ceoSidebarStateChange', handleSidebarStateChange);
+      window.removeEventListener('sidebarToggle', handleSidebarToggle);
       window.removeEventListener('resize', handleResize);
+      observer.disconnect();
     };
   }, []);
   
@@ -645,54 +727,69 @@ const StafPlanSteps = () => {
 
 
   return (
-    <div
-      className="modern-plan-steps-container"
-      style={{
-        marginLeft: `${sidebarState.mainContentMargin}px`,
-        transition: "margin-left 0.3s ease",
-        width: `calc(100% - ${sidebarState.mainContentMargin}px)`,
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-        padding: "2rem",
-      }}
-    >
-      {/* Header */}
-      <div className="plan-steps-header">
-        <div className="header-content">
-          <h1 className="page-title">
-            <FontAwesomeIcon icon={faFileContract} className="title-icon" />
-            የእቅድ መመዝገቢያ ስርዓት
-          </h1>
-          <p className="page-subtitle">Professional Plan Creation Workflow</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Header Section */}
+      <div className="bg-white bg-opacity-90 border-b border-gray-200 sticky top-0 z-40 shadow-sm" style={{ backdropFilter: 'blur(12px)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* Title Section */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-200">
+                <FontAwesomeIcon icon={faFileContract} className="text-white text-xl" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                  የእቅድ መመዝገቢያ ስርዓት
+                </h1>
+                <p className="text-gray-600 text-sm lg:text-base font-medium">Professional Plan Creation & Management System</p>
+              </div>
+            </div>
 
-        {/* Mode Selector */}
-        <div className="mode-selector">
-          <button
-            className={`mode-btn ${currentMode === 'create' ? 'active' : ''}`}
-            onClick={() => setCurrentMode('create')}
-          >
-            <FontAwesomeIcon icon={faPlus} />
-            <span>Create New Plan</span>
-          </button>
-          <button
-            className={`mode-btn ${currentMode === 'view' ? 'active' : ''}`}
-            onClick={() => setCurrentMode('view')}
-          >
-            <FontAwesomeIcon icon={faList} />
-            <span>View My Plans</span>
-          </button>
+            {/* Mode Selector */}
+            <div className="flex bg-gray-100 bg-opacity-80 rounded-2xl p-1.5 shadow-inner border border-gray-200" style={{ backdropFilter: 'blur(4px)' }}>
+              <button
+                className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
+                  currentMode === 'create'
+                    ? 'bg-white text-blue-600 shadow-lg scale-105 border border-blue-100'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                }`}
+                onClick={() => setCurrentMode('create')}
+              >
+                <FontAwesomeIcon icon={faPlus} className="text-sm" />
+                <span>Create New Plan</span>
+              </button>
+              <button
+                className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform ${
+                  currentMode === 'view'
+                    ? 'bg-white text-blue-600 shadow-lg scale-105 border border-blue-100'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                }`}
+                onClick={() => setCurrentMode('view')}
+              >
+                <FontAwesomeIcon icon={faList} className="text-sm" />
+                <span>View My Plans</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="plan-steps-content">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Display */}
         {error && (
-          <div key="error-alert" className="alert alert-error">
-            <FontAwesomeIcon icon={faExclamationTriangle} />
-            <span>{error}</span>
-            <button onClick={() => setError(null)}>
+          <div className="mb-6 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl p-6 flex items-start space-x-4 shadow-sm">
+            <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 text-lg" />
+            </div>
+            <div className="flex-1">
+              <p className="text-red-800 font-semibold text-lg">Error</p>
+              <p className="text-red-700 text-sm mt-1">{error}</p>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-600 transition-colors p-1 hover:bg-red-100 rounded-lg"
+            >
               <FontAwesomeIcon icon={faTimes} />
             </button>
           </div>
@@ -700,10 +797,18 @@ const StafPlanSteps = () => {
 
         {/* Success Message */}
         {successMessage && (
-          <div key="success-alert" className="alert alert-success">
-            <FontAwesomeIcon icon={faCheckCircle} />
-            <span>{successMessage}</span>
-            <button onClick={() => setSuccessMessage("")}>
+          <div className="mb-6 bg-green-50/80 backdrop-blur-sm border border-green-200/50 rounded-2xl p-6 flex items-start space-x-4 shadow-sm">
+            <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-lg" />
+            </div>
+            <div className="flex-1">
+              <p className="text-green-800 font-semibold text-lg">Success</p>
+              <p className="text-green-700 text-sm mt-1">{successMessage}</p>
+            </div>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-400 hover:text-green-600 transition-colors p-1 hover:bg-green-100 rounded-lg"
+            >
               <FontAwesomeIcon icon={faTimes} />
             </button>
           </div>
@@ -711,61 +816,83 @@ const StafPlanSteps = () => {
 
         {/* CREATE MODE - Plan Creation Interface */}
         {currentMode === 'create' && (
-          <div className="create-plan-content">
+          <div className="create-plan-content space-y-8">
 
         {/* Cascading Dropdown Interface */}
-        <div className="cascading-dropdowns">
+        <div className="cascading-dropdowns space-y-6">
           {/* Goal Selection */}
-          <div key="goal-selection" className="dropdown-section">
-            <div className="section-header">
-              <h3>
-                <FontAwesomeIcon icon={faChartLine} />
-                Select Goal
-              </h3>
-              {selectedGoal && (
-                <div className="selected-item">
-                  <span>{selectedGoal.name}</span>
-                  <button onClick={() => {
-                    setSelectedGoal(null);
-                    setSelectedObjective(null);
-                    setSelectedSpecificObjective(null);
-                  }}>
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
+          <div key="goal-selection" className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-8 py-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                    <FontAwesomeIcon icon={faChartLine} className="text-white text-xl" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Select Goal</h3>
+                    <p className="text-blue-100 text-sm">Choose your primary objective</p>
+                  </div>
                 </div>
-              )}
+                {selectedGoal && (
+                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3 flex items-center space-x-3">
+                    <span className="text-white font-semibold text-lg">{selectedGoal.name}</span>
+                    <button 
+                      onClick={() => {
+                        setSelectedGoal(null);
+                        setSelectedObjective(null);
+                        setSelectedSpecificObjective(null);
+                      }}
+                      className="w-8 h-8 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors duration-200"
+                    >
+                      <FontAwesomeIcon icon={faTimes} className="text-white text-sm" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {!selectedGoal && (
-              <div className="dropdown-content">
-                <div className="search-box">
-                  <FontAwesomeIcon icon={faSearch} className="search-icon" />
+              <div className="p-8">
+                <div className="relative mb-6">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FontAwesomeIcon icon={faSearch} className="text-gray-400 text-lg" />
+                  </div>
                   <input
                     type="text"
                     placeholder="Search goals..."
                     value={searchTerms.goal}
                     onChange={(e) => setSearchTerms(prev => ({ ...prev, goal: e.target.value }))}
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500 text-lg"
                   />
                 </div>
 
                 {isLoading ? (
-                  <div className="loading-state">
-                    <FontAwesomeIcon icon={faSpinner} spin />
-                    <span>Loading goals...</span>
+                  <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center animate-pulse">
+                      <FontAwesomeIcon icon={faSpinner} spin className="text-white text-2xl" />
+                    </div>
+                    <span className="text-gray-600 text-lg font-medium">Loading goals...</span>
                   </div>
                 ) : (
-                  <div className="options-grid">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {getFilteredGoals().map((goal) => (
                       <div
                         key={goal.goal_id}
-                        className="option-card"
                         onClick={() => handleGoalSelect(goal)}
+                        className="group bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-200/50 hover:border-blue-300/50 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50"
                       >
-                        <div className="option-header">
-                          <h4>{goal.name}</h4>
-                          <FontAwesomeIcon icon={faChevronRight} />
+                        <div className="flex items-start justify-between mb-4">
+                          <h4 className="text-xl font-bold text-gray-900 group-hover:text-blue-700 transition-colors duration-200 line-clamp-2">{goal.name}</h4>
+                          <div className="w-8 h-8 bg-blue-100 group-hover:bg-blue-200 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+                            <FontAwesomeIcon icon={faChevronRight} className="text-blue-600 text-sm" />
+                          </div>
                         </div>
-                        <p>{goal.description}</p>
+                        <p className="text-gray-600 group-hover:text-gray-700 text-sm leading-relaxed line-clamp-3">{goal.description}</p>
+                        <div className="mt-4 pt-4 border-t border-gray-100 group-hover:border-blue-100">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 group-hover:bg-blue-200">
+                            Click to select
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -776,55 +903,77 @@ const StafPlanSteps = () => {
 
           {/* Objective Selection */}
           {selectedGoal && (
-            <div key="objective-selection" className="dropdown-section">
-              <div className="section-header">
-                <h3>
-                  <FontAwesomeIcon icon={faFileContract} />
-                  Select Objective
-                </h3>
-                {selectedObjective && (
-                  <div className="selected-item">
-                    <span>{selectedObjective.name}</span>
-                    <button onClick={() => {
-                      setSelectedObjective(null);
-                      setSelectedSpecificObjective(null);
-                    }}>
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
+            <div key="objective-selection" className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden transition-all duration-300 hover:shadow-2xl animate-fade-in">
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-8 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                      <FontAwesomeIcon icon={faFileContract} className="text-white text-xl" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Select Objective</h3>
+                      <p className="text-emerald-100 text-sm">Define your specific target</p>
+                    </div>
                   </div>
-                )}
+                  {selectedObjective && (
+                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3 flex items-center space-x-3">
+                      <span className="text-white font-semibold text-lg">{selectedObjective.name}</span>
+                      <button 
+                        onClick={() => {
+                          setSelectedObjective(null);
+                          setSelectedSpecificObjective(null);
+                        }}
+                        className="w-8 h-8 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors duration-200"
+                      >
+                        <FontAwesomeIcon icon={faTimes} className="text-white text-sm" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {!selectedObjective && (
-                <div className="dropdown-content">
-                  <div className="search-box">
-                    <FontAwesomeIcon icon={faSearch} className="search-icon" />
+                <div className="p-8">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FontAwesomeIcon icon={faSearch} className="text-gray-400 text-lg" />
+                    </div>
                     <input
                       type="text"
                       placeholder="Search objectives..."
                       value={searchTerms.objective}
                       onChange={(e) => setSearchTerms(prev => ({ ...prev, objective: e.target.value }))}
+                      className="w-full pl-12 pr-4 py-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 text-gray-900 placeholder-gray-500 text-lg"
                     />
                   </div>
 
                   {isLoading ? (
-                    <div className="loading-state">
-                      <FontAwesomeIcon icon={faSpinner} spin />
-                      <span>Loading objectives...</span>
+                    <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                      <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center animate-pulse">
+                        <FontAwesomeIcon icon={faSpinner} spin className="text-white text-2xl" />
+                      </div>
+                      <span className="text-gray-600 text-lg font-medium">Loading objectives...</span>
                     </div>
                   ) : (
-                    <div className="options-grid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {getFilteredObjectives().map((objective) => (
                         <div
                           key={objective.objective_id || objective.id}
-                          className="option-card"
                           onClick={() => handleObjectiveSelect(objective)}
+                          className="group bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-200/50 hover:border-emerald-300/50 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-teal-50"
                         >
-                          <div className="option-header">
-                            <h4>{objective.name}</h4>
-                            <FontAwesomeIcon icon={faChevronRight} />
+                          <div className="flex items-start justify-between mb-4">
+                            <h4 className="text-xl font-bold text-gray-900 group-hover:text-emerald-700 transition-colors duration-200 line-clamp-2">{objective.name}</h4>
+                            <div className="w-8 h-8 bg-emerald-100 group-hover:bg-emerald-200 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+                              <FontAwesomeIcon icon={faChevronRight} className="text-emerald-600 text-sm" />
+                            </div>
                           </div>
-                          <p>{objective.description}</p>
+                          <p className="text-gray-600 group-hover:text-gray-700 text-sm leading-relaxed line-clamp-3">{objective.description}</p>
+                          <div className="mt-4 pt-4 border-t border-gray-100 group-hover:border-emerald-100">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 group-hover:bg-emerald-200">
+                              Click to select
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -836,54 +985,76 @@ const StafPlanSteps = () => {
 
           {/* Specific Objective Selection */}
           {selectedObjective && (
-            <div key="specific-objective-selection" className="dropdown-section">
-              <div className="section-header">
-                <h3>
-                  <FontAwesomeIcon icon={faChartLine} />
-                  Select Specific Objective
-                </h3>
-                {selectedSpecificObjective && (
-                  <div className="selected-item">
-                    <span>{selectedSpecificObjective.specific_objective_name}</span>
-                    <button onClick={() => {
-                      setSelectedSpecificObjective(null);
-                    }}>
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
+            <div key="specific-objective-selection" className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden transition-all duration-300 hover:shadow-2xl animate-fade-in">
+              <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 px-8 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                      <FontAwesomeIcon icon={faTasks} className="text-white text-xl" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Select Specific Objective</h3>
+                      <p className="text-purple-100 text-sm">Choose your detailed action plan</p>
+                    </div>
                   </div>
-                )}
+                  {selectedSpecificObjective && (
+                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3 flex items-center space-x-3">
+                      <span className="text-white font-semibold text-lg">{selectedSpecificObjective.specific_objective_name}</span>
+                      <button 
+                        onClick={() => {
+                          setSelectedSpecificObjective(null);
+                        }}
+                        className="w-8 h-8 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors duration-200"
+                      >
+                        <FontAwesomeIcon icon={faTimes} className="text-white text-sm" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {!selectedSpecificObjective && (
-                <div className="dropdown-content">
-                  <div className="search-box">
-                    <FontAwesomeIcon icon={faSearch} className="search-icon" />
+                <div className="p-8">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <FontAwesomeIcon icon={faSearch} className="text-gray-400 text-lg" />
+                    </div>
                     <input
                       type="text"
                       placeholder="Search specific objectives..."
                       value={searchTerms.specific}
                       onChange={(e) => setSearchTerms(prev => ({ ...prev, specific: e.target.value }))}
+                      className="w-full pl-12 pr-4 py-4 bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 text-gray-900 placeholder-gray-500 text-lg"
                     />
                   </div>
 
                   {isLoading ? (
-                    <div className="loading-state">
-                      <FontAwesomeIcon icon={faSpinner} spin />
-                      <span>Loading specific objectives...</span>
+                    <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                      <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center animate-pulse">
+                        <FontAwesomeIcon icon={faSpinner} spin className="text-white text-2xl" />
+                      </div>
+                      <span className="text-gray-600 text-lg font-medium">Loading specific objectives...</span>
                     </div>
                   ) : (
-                    <div className="options-grid">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {getFilteredSpecificObjectives().map((specific) => (
                         <div
                           key={specific.specific_objective_id}
-                          className="option-card"
                           onClick={() => handleSpecificObjectiveSelect(specific)}
+                          className="group bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-200/50 hover:border-purple-300/50 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50"
                         >
-                          <div className="option-header">
-                            <h4>{specific.specific_objective_name}</h4>
-                            <FontAwesomeIcon icon={faChevronRight} />
+                          <div className="flex items-start justify-between mb-4">
+                            <h4 className="text-xl font-bold text-gray-900 group-hover:text-purple-700 transition-colors duration-200 line-clamp-2">{specific.specific_objective_name}</h4>
+                            <div className="w-8 h-8 bg-purple-100 group-hover:bg-purple-200 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+                              <FontAwesomeIcon icon={faChevronRight} className="text-purple-600 text-sm" />
+                            </div>
                           </div>
-                          <p>{specific.view}</p>
+                          <p className="text-gray-600 group-hover:text-gray-700 text-sm leading-relaxed line-clamp-3">{specific.view}</p>
+                          <div className="mt-4 pt-4 border-t border-gray-100 group-hover:border-purple-100">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 group-hover:bg-purple-200">
+                              Click to select
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -892,48 +1063,75 @@ const StafPlanSteps = () => {
               )}
             </div>
           )}
-
-
         </div>
 
     
 
         {/* Review Section */}
         {currentStep === 'review' && (
-          <div key="review-section" className="review-section">
-            <div className="review-header">
-              <h2>
-                <FontAwesomeIcon icon={faCheckCircle} />
-                Plan Submitted Successfully!
-              </h2>
-              <p>Your plan has been created and submitted for review.</p>
-            </div>
-
-            <div className="review-summary">
-              <div className="summary-item">
-                <strong>Goal:</strong> {selectedGoal?.name}
-              </div>
-              <div className="summary-item">
-                <strong>Objective:</strong> {selectedObjective?.name}
-              </div>
-              <div className="summary-item">
-                <strong>Specific Objective:</strong> {selectedSpecificObjective?.specific_objective_name}
-              </div>
-              <div className="summary-item">
-                <strong>Plan Type:</strong> {formData.plan_type}
-              </div>
-              <div className="summary-item">
-                <strong>Year:</strong> {formData.year}
+          <div key="review-section" className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden animate-fade-in">
+            <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 px-8 py-8">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                  <FontAwesomeIcon icon={faCheckCircle} className="text-white text-3xl" />
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">Plan Submitted Successfully!</h2>
+                <p className="text-green-100 text-lg">Your plan has been created and submitted for review.</p>
               </div>
             </div>
 
-            <div className="review-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => window.location.reload()}
-              >
-                Create Another Plan
-              </button>
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200/50">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <FontAwesomeIcon icon={faBullseye} className="text-white text-sm" />
+                    </div>
+                    <span className="font-semibold text-blue-900">Goal</span>
+                  </div>
+                  <p className="text-gray-700 font-medium">{selectedGoal?.name}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200/50">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
+                      <FontAwesomeIcon icon={faFileContract} className="text-white text-sm" />
+                    </div>
+                    <span className="font-semibold text-emerald-900">Objective</span>
+                  </div>
+                  <p className="text-gray-700 font-medium">{selectedObjective?.name}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200/50">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                      <FontAwesomeIcon icon={faTasks} className="text-white text-sm" />
+                    </div>
+                    <span className="font-semibold text-purple-900">Specific Objective</span>
+                  </div>
+                  <p className="text-gray-700 font-medium">{selectedSpecificObjective?.specific_objective_name}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-200/50">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                      <FontAwesomeIcon icon={faListCheck} className="text-white text-sm" />
+                    </div>
+                    <span className="font-semibold text-orange-900">Plan Details</span>
+                  </div>
+                  <p className="text-gray-700 font-medium">Type: {formData.plan_type} | Year: {formData.year}</p>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <FontAwesomeIcon icon={faPlus} className="text-lg" />
+                  <span>Create Another Plan</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1728,787 +1926,9 @@ const StafPlanSteps = () => {
           </div>
         )}
       </div>
-    </div>
-  );
-};
+      </div>
+      );
+      };
 
 export default StafPlanSteps;
 
-
-
-// step 4 code 
-
-// const Step4SpecificObjectiveDetails = ({ specificObjectiveId, token, onBack, onNext }) => {
-//   const [specificObjectiveDetails, setSpecificObjectiveDetails] = useState([]);
-//   const [newDetail, setNewDetail] = useState({
-//     name: "",
-//     description: "",
-//     baseline: "",
-//     plan: "",
-//     measurement: "",
-//     year: "",
-//     month: "",
-//     day: "",
-//     deadline: "",
-//     planType: "",
-//     costType: "",
-//     incomeType: "",
-//     incomeExchange: "",
-//     hrType: "",
-//     employmentType: "",
-//     costName: "",
-//     incomeName: "",
-//     CustomcostName: "",
-//     CIbaseline: "",
-//     CIplan: "",
-//     xzx: "",
-//     CItotalBaseline: "",
-//     CItotalPlan: "",
-//     CItotalExpectedOutcome: ""
-//   });
-  
-//   const defaultDetailValues = {
-//     name: "",
-//     description: "",
-//     baseline: "",
-//     plan: "",
-//     measurement: "",
-//     year: "",
-//     month: "",
-//     day: "",
-//     deadline: "",
-//     planType: "",
-//     costType: "",
-//     incomeType: "",
-//     incomeExchange: "",
-//     hrType: "",
-//     employmentType: "",
-//   };
-
-//   const [error, setError] = useState(null);
-//   const [successMessage, setSuccessMessage] = useState(null);
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   useEffect(() => {
-//     console.log("Step 4 received specificObjectiveId:", specificObjectiveId);
-//   }, [specificObjectiveId]);
-
-//   console.log("Details array:", specificObjectiveDetails);
-//   console.log("Length of details array:", specificObjectiveDetails.length);
-
-//   // Compute inline error for deadline year validation
-//   const deadlineYearError =
-//     newDetail.deadline && newDetail.year && new Date(newDetail.deadline).getFullYear() < newDetail.year
-//       ? "Deadline's year must be greater than or equal to the specified year."
-//       : "";
-
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       [name]: name === "year" || name === "month" || name === "day" ? Number(value) : value,
-//     }));
-//   };
-
-//   const handlePlanTypeChange = (e) => {
-//     const { value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       planType: value,
-//       costType: "",
-//       incomeType: "",
-//       hrType: "",
-//       costName: "",
-//       incomeName: ""
-//     }));
-//   };
-
-//   // Calculation function for expected outcome
-//   const calculateExpectedOutcome = (baseline, plan) => {
-//     const baselineNum = parseFloat(baseline) || 0;
-//     const planNum = parseFloat(plan) || 0;
-//     return planNum - baselineNum;
-//   };
-
-//   // Handler for CI fields
-//   const handleCIInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setNewDetail((prev) => {
-//       const newValues = { ...prev, [name]: value };
-//       if (name === "CIbaseline" || name === "CIplan") {
-//         newValues.xzx = calculateExpectedOutcome(name === "CIbaseline" ? value : prev.CIbaseline, name === "CIplan" ? value : prev.CIplan);
-//       }
-//       return newValues;
-//     });
-//   };
-
-//   const handleCostNameChange = (e) => {
-//     const { value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       costName: value,
-//       CustomcostName: value !== "other" ? "" : prevDetail.CustomcostName
-//     }));
-//   };
-
-//   const handleincomeNameChange = (e) => {
-//     setNewDetail((prev) => ({
-//       ...prev,
-//       incomeName: e.target.value,
-//     }));
-//   };
-
-//   const handleCostTypeChange = (e) => {
-//     const { value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       costType: value,
-//       CustomcostName: value === "other" ? "" : value,
-//     }));
-//   };
-
-//   const handleIncomeTypeChange = (e) => {
-//     const { value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       incomeType: value,
-//       incomeName: value === "other" ? "" : value,
-//     }));
-//   };
-
-//   const handleHRTypeChange = (e) => {
-//     const { value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       hrType: value,
-//     }));
-//   };
-
-//   const handleIncomeExchangeChange = (e) => {
-//     const { value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       incomeExchange: value,
-//       incomeType: "",
-//       incomeName: "",
-//     }));
-//   };
-  
-//   const handleEmploymentTypeChange = (e) => {
-//     const { value } = e.target;
-//     setNewDetail((prevDetail) => ({
-//       ...prevDetail,
-//       employmentType: value,
-//     }));
-//   };
-  
-//   const handleCreateDetail = async () => {
-//     if (!specificObjectiveId) {
-//       Swal.fire("Error", "Specific objective ID is missing.", "error");
-//       return;
-//     }
-    
-//     // Validate deadline's year on submit
-//     if (newDetail.deadline && newDetail.year) {
-//       const deadlineYear = new Date(newDetail.deadline).getFullYear();
-//       if (deadlineYear < newDetail.year) {
-//         Swal.fire("Error", "The deadline's year must be greater than or equal to the specified year.", "error");
-//         return;
-//       }
-//     }
-  
-//     try {
-//       setIsLoading(true);
-//       const payload = {
-//         specific_objective: [
-//           {
-//             specific_objective_id: specificObjectiveId,
-//             specific_objective_detailname: newDetail.name,
-//             details: newDetail.description,
-//             baseline: newDetail.baseline.toString(),
-//             plan: newDetail.plan.toString(),
-//             measurement: newDetail.measurement.toString(),
-//             year: newDetail.year.toString(),
-//             month: newDetail.month.toString(),
-//             day: newDetail.day.toString(),
-//             deadline: newDetail.deadline,
-//             plan_type: newDetail.planType || "default_plan",
-//             cost_type: newDetail.costType,
-//             income_exchange: newDetail.incomeExchange,
-//             employment_type: newDetail.employmentType,
-//             costName: newDetail.costName === "other" 
-//               ? newDetail.CustomcostName 
-//               : newDetail.costName,
-//             incomeName: newDetail.incomeName,
-//             CIbaseline: newDetail.CIbaseline.toString(),
-//             CIplan: newDetail.CIplan,
-//             xzx: newDetail.xzx.toString()
-//           },
-//         ],
-//       };
-  
-//       console.log("Payload:", payload);
-  
-//       const response = await axios.post(
-//         "http://localhost:5001/api/addspecificObjectiveDetail",
-//         payload,
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-  
-//       console.log("API Response:", response.data);
-  
-//       const createdDetailId = response.data?.id || response.data?.insertIds?.[0];
-  
-//       if (!createdDetailId) {
-//         console.error("Server response does not contain a valid ID:", response.data);
-//         Swal.fire("Error", "The server did not return a valid ID. Please check the server logs.", "error");
-//         return;
-//       }
-  
-//       // Create the new updated array of details including the newly created detail.
-//       const updatedDetails = [
-//         ...specificObjectiveDetails,
-//         { ...newDetail, id: createdDetailId },
-//       ];
-  
-//       setSpecificObjectiveDetails(updatedDetails);
-  
-//       Swal.fire("Success", "Detail created successfully!", "success").then(() => {
-//         // Automatically move to the next step after successful creation
-//         onNext(updatedDetails);
-//       });
-  
-//       // Reset the newDetail state to default values
-//       setNewDetail({ ...defaultDetailValues });
-//     } catch (err) {
-//       console.error("Error occurred:", err);
-//       Swal.fire("Error", err.response?.data?.message || "Failed to create detail.", "error");
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-  
-//   const handleNext = () => {
-//     console.log("Navigating to the next step with all details:", specificObjectiveDetails);
-//     if (specificObjectiveDetails.length > 0) {
-//       onNext(specificObjectiveDetails);
-//     } else {
-//       setError("Please add at least one detail before proceeding.");
-//     }
-//   };
-
-//   return (
-//     <div className="form-container">
-//       <h3 className="form-title">
-//         አዲስ የውጤቶ ተግባር ዝርዝር ይመዝግቡ
-//       </h3>
-  
-//       <form className="form-fields">
-//         {/* Plan Type Select */}
-//         <div className="form-field">
-//           <label htmlFor="planType" className="form-label">
-//             የተግባሩ አይነት
-//           </label>
-//           <select
-//             id="planType"
-//             name="planType"
-//             value={newDetail.planType}
-//             onChange={handlePlanTypeChange}
-//             className="form-select"
-//           >
-//             <option value="">⬇️ Select Plan Type</option>
-//             <option value="cost">ወጪ</option>
-//             <option value="income">ገቢ</option>
-//             <option value="hr">ሰራተኞች</option>
-//           </select>
-//         </div>
-  
-//         {/* Conditional Fields for Cost Type, Income Type, and Employment Type */}
-//         {newDetail.planType === "cost" && (
-//           <div className="form-field-group">
-//             <div className="form-field">
-//               <label htmlFor="costType" className="form-label">
-//                 ወጪ አይነት
-//               </label>
-//               <select
-//                 id="costType"
-//                 name="costType"
-//                 value={newDetail.costType}
-//                 onChange={handleCostTypeChange}
-//                 className="form-select"
-//               >
-//                 <option value="">⬇️ Select Cost Type</option>
-//                 <option value="regular_budget">መደበኛ ወጪ</option>
-//                 <option value="capital_project_budget">ካፒታል ፕሮጀክት ወጪ</option>
-//               </select>
-//             </div>
-  
-//             {newDetail.costType && (
-//               <div className="form-field">
-//                 <label htmlFor="costName" className="form-label">
-//                   ወጪ ስም
-//                 </label>
-//                 <select
-//                   id="costName"
-//                   name="costName"
-//                   value={newDetail.costName}
-//                   onChange={handleCostNameChange}
-//                   className="form-select"
-//                 >
-//                   <option value="">⬇️ Select Cost Name</option>
-//                   {newDetail.costType === "regular_budget" && (
-//                     <>
-//                       <option disabled className="group-header">regular_budget options</option>
-//                       <option value="Annual Leave Expense">Annual Leave Expense (511111)</option>
-//                       <option value="Basic Salary Expense">Basic Salary Expense (511101)</option>
-//                       <option value="Bonus">Bonus (511114)</option>
-//                       <option value="Building Insurance">Building Insurance (511351)</option>
-//                       <option value="Building Rent Expense">Building Rent Expense (511301)</option>
-//                       <option value="Cash Indemnity Allowance">Cash Indemnity Allowance (511107)</option>
-//                       <option value="Cash Indemnity Insurance">Cash Indemnity Insurance (511354)</option>
-//                       <option value="Chemical Material Expense">Chemical Material Expense (511453)</option>
-//                       <option value="Cleaning and Sanitation Service Expense">Cleaning and Sanitation Service Expense (511205)</option>
-//                       <option value="Consultants Services Expense">Consultants Services Expense (511207)</option>
-//                       <option value="Daily Labourers Fee">Daily Labourers Fee (511115)</option>
-//                       <option value="Food Items">Food Items (511454)</option>
-//                       <option value="Fuel Allowance">Fuel Allowance (511109)</option>
-//                       <option value="Fuel and Lubricants">Fuel and Lubricants (511402)</option>
-//                       <option value="Greenery Services Expense">Greenery Services Expense (511202)</option>
-//                       <option value="Hardship Allowance">Hardship Allowance (511113)</option>
-//                       <option value="Housing Allowance">Housing Allowance (511104)</option>
-//                       <option value="Janitorial and Cleaning Supplies">Janitorial and Cleaning Supplies (511455)</option>
-//                       <option value="Materials & Supplies">Materials & Supplies (511450)</option>
-//                       <option value="Medical and Hospitalization">Medical and Hospitalization (511208)</option>
-//                       <option value="Other Allowances">Other Allowances (511116)</option>
-//                       <option value="Other Communication Expenses">Other Communication Expenses (511553)</option>
-//                       <option value="Other Employee Benefits">Other Employee Benefits (511117)</option>
-//                       <option value="Other Insurance">Other Insurance (511355)</option>
-//                       <option value="Other Materials and Supplies">Other Materials and Supplies (511457)</option>
-//                       <option value="Overtime Pay Expense">Overtime Pay Expense (511103)</option>
-//                       <option value="Parking and Express Road Expense">Parking and Express Road Expense (511403)</option>
-//                       <option value="Pension Contribution 11%">Pension Contribution 11% (511110)</option>
-//                       <option value="Printed Materials">Printed Materials</option>
-//                       <option value="Responsibility and Acting Allowance">Responsibility and Acting Allowance (511106)</option>
-//                       <option value="Solid Waste Removal Services Expense">Solid Waste Removal Services Expense (511203)</option>
-//                       <option value="Sewage Line Cleaning Expense">Sewage Line Cleaning Expense (511201)</option>
-//                       <option value="Stationery and Office Supplies">Stationery and Office Supplies (511451)</option>
-//                       <option value="Telephone Allowance">Telephone Allowance (511108)</option>
-//                       <option value="Telephone, Fax, and Internet Expenses">Telephone, Fax, and Internet Expenses (511551)</option>
-//                       <option value="Transport Allowance">Transport Allowance (511105)</option>
-//                       <option value="Uniform">Uniform (511500-01)</option>
-//                       <option value="Uniform and Outfit Expense">Uniform and Outfit Expense (511501)</option>
-//                       <option value="Vehicle Inspection">Vehicle Inspection (511401)</option>
-//                       <option value="Vehicle Rent Expense">Vehicle Rent Expense (511302)</option>
-//                       <option value="Vehicle Running">Vehicle Running (511400-04)</option>
-//                       <option value="Workmen Compensation">Workmen Compensation (511112)</option>
-//                       <option value="Zero Liquid Discharge Operations and Management Expense">Zero Liquid Discharge Operations and Management Expense (511204)</option>
-//                     </>
-//                   )}
-//                   {newDetail.costType === "capital_project_budget" && (
-//                     <>
-//                       <option disabled className="group-header">capital_project_budget options</option>
-//                       <option value="Plant, Machinery and Equipment">Plant, Machinery and Equipment (122102)</option>
-//                       <option value="Office Furnitures, Equipment and Fixtures">Office Furnitures, Equipment and Fixtures (122103)</option>
-//                       <option value="ETP and STP Building and Structure">ETP and STP Building and Structure (122104)</option>
-//                       <option value="Power House">Power House (122105)</option>
-//                       <option value="ICT Equipments">ICT Equipments (122106)</option>
-//                       <option value="Vehicles and Vehicles Accessories">Vehicles and Vehicles Accessories (122107)</option>
-//                       <option value="Household Equipment">Household Equipment (122108)</option>
-//                       <option value="Laboratory Equipment">Laboratory Equipment (122109)</option>
-//                       <option value="Construction Equipment">Construction Equipment (122110)</option>
-//                       <option value="Bore Hole Station">Bore Hole Station (122111)</option>
-//                       <option value="Other Fixed Assets">Other Fixed Assets (122112)</option>
-//                       <option value="Property, Plant and Equipment - Clearing">Property, Plant and Equipment - Clearing (122113)</option>
-//                       <option value="Infrstructure Consultancy">Infrstructure Consultancy (122114)</option>
-//                       <option value="Right of use of Land (PPE)">Right of use of Land (PPE) (122115)</option>
-//                     </>
-//                   )}
-//                   <option disabled className="group-header">if NOT listed above, select "Other"</option>
-//                   <option value="other">Other</option>
-//                 </select>
-  
-//                 {newDetail.costName === "other" && (
-//                   <div className="form-field">
-//                     <label htmlFor="CustomcostName" className="form-label">
-//                       አዲስ ወጪ ስም እንዲገቡ
-//                     </label>
-//                     <input
-//                       id="CustomcostName"
-//                       type="text"
-//                       name="CustomcostName"
-//                       placeholder="አዲስ ወጪ ስም ከዚህ ያስገቡ"
-//                       value={newDetail.CustomcostName}
-//                       onChange={handleInputChange}
-//                       className="form-input"
-//                     />
-//                   </div>
-//                 )}
-  
-//                 <div className="ci-fields">
-//                   <div className="form-field">
-//                     <label htmlFor="CIbaseline" className="form-label">Baseline</label>
-//                     <input
-//                       id="CIbaseline"
-//                       type="number"
-//                       name="CIbaseline"
-//                       value={newDetail.CIbaseline || ""}
-//                       onChange={(e) =>
-//                         setNewDetail((prev) => ({
-//                           ...prev,
-//                           CIbaseline: e.target.value,
-//                           xzx: e.target.value && newDetail.CIplan ? newDetail.CIplan - e.target.value : ""
-//                         }))
-//                       }
-//                       className="form-input"
-//                     />
-//                   </div>
-//                   <div className="form-field">
-//                     <label htmlFor="CIplan" className="form-label">Plan</label>
-//                     <input
-//                       id="CIplan"
-//                       type="number"
-//                       name="CIplan"
-//                       value={newDetail.CIplan || ""}
-//                       onChange={(e) =>
-//                         setNewDetail((prev) => ({
-//                           ...prev,
-//                           CIplan: e.target.value,
-//                           xzx: newDetail.CIbaseline ? e.target.value - newDetail.CIbaseline : ""
-//                         }))
-//                       }
-//                       className="form-input"
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         )}
-  
-//         {newDetail.planType === "income" && (
-//           <div className="form-field-group">
-//             <div className="form-field">
-//               <label htmlFor="incomeExchange" className="form-label">
-//                 ገቢ ምንዛሬ
-//               </label>
-//               <select
-//                 id="incomeExchange"
-//                 name="incomeExchange"
-//                 value={newDetail.incomeExchange}
-//                 onChange={handleIncomeExchangeChange}
-//                 className="form-select"
-//               >
-//                 <option value="">⬇️ Select Income Exchange</option>
-//                 <option value="etb">በETB ምንዛሬ</option>
-//                 <option value="usd">በUSD ምንዛሬ</option>
-//               </select>
-//             </div>
-  
-//             {newDetail.incomeExchange && (
-//               <div className="form-field">
-//                 <label htmlFor="incomeName" className="form-label">
-//                   ገቢ ስም
-//                 </label>
-//                 <select
-//                   id="incomeName"
-//                   name="incomeName"
-//                   value={newDetail.incomeType}
-//                   onChange={handleIncomeTypeChange}
-//                   className="form-select"
-//                 >
-//                   <option value="">⬇️ Select Income Name</option>
-//                   <option value="ከህንጻ ኪራይ">ከህንጻ ኪራይ</option>
-//                   <option value="ከመሬት ንኡስ ሊዝ">ከመሬት ንዑስ ሊዝ</option>
-//                   <option value="other">Other</option>
-//                 </select>
-  
-//                 {newDetail.incomeType === "other" && (
-//                   <div className="form-field">
-//                     <label htmlFor="incomeName" className="form-label">
-//                       አዲስ ገቢ ስም እንዲገቡ
-//                     </label>
-//                     <input
-//                       id="incomeName"
-//                       type="text"
-//                       name="incomeName"
-//                       placeholder="አዲስ ገቢ ስም ከዚህ ያስገቡ"
-//                       value={newDetail.incomeName}
-//                       onChange={handleInputChange}
-//                       className="form-input"
-//                     />
-//                   </div>
-//                 )}
-  
-//                 <div className="ci-fields">
-//                   <div className="form-field">
-//                     <label htmlFor="CIbaseline" className="form-label">Baseline</label>
-//                     <input
-//                       id="CIbaseline"
-//                       type="number"
-//                       name="CIbaseline"
-//                       value={newDetail.CIbaseline || ""}
-//                       onChange={(e) =>
-//                         setNewDetail((prev) => ({
-//                           ...prev,
-//                           CIbaseline: e.target.value,
-//                           xzx: e.target.value && newDetail.CIplan ? newDetail.CIplan - e.target.value : ""
-//                         }))
-//                       }
-//                       className="form-input"
-//                     />
-//                   </div>
-//                   <div className="form-field">
-//                     <label htmlFor="CIplan" className="form-label">Plan</label>
-//                     <input
-//                       id="CIplan"
-//                       type="number"
-//                       name="CIplan"
-//                       value={newDetail.CIplan || ""}
-//                       onChange={(e) =>
-//                         setNewDetail((prev) => ({
-//                           ...prev,
-//                           CIplan: e.target.value,
-//                           xzx: newDetail.CIbaseline ? e.target.value - newDetail.CIbaseline : ""
-//                         }))
-//                       }
-//                       className="form-input"
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         )}
-  
-//         {newDetail.planType === "hr" && (
-//           <div className="form-field-group">
-//             <label htmlFor="employmentType" className="form-label">
-//               ሰራተኞች አይነት
-//             </label>
-//             <select
-//               id="employmentType"
-//               name="employmentType"
-//               value={newDetail.employmentType}
-//               onChange={handleEmploymentTypeChange}
-//               className="form-select"
-//             >
-//               <option value="">⬇️ Select Employment Type</option>
-//               <option value="full_time">ቋሚ</option>
-//               <option value="contract">ኮንትራት</option>
-//             </select>
-            
-//             <div className="ci-fields">
-//               <div className="form-field">
-//                 <label htmlFor="CIbaseline" className="form-label">Baseline</label>
-//                 <input
-//                   id="CIbaseline"
-//                   type="number"
-//                   name="CIbaseline"
-//                   value={newDetail.CIbaseline || ""}
-//                   onChange={(e) =>
-//                     setNewDetail((prev) => ({
-//                       ...prev,
-//                       CIbaseline: e.target.value,
-//                       xzx: e.target.value && newDetail.CIplan ? newDetail.CIplan - e.target.value : ""
-//                     }))
-//                   }
-//                   className="form-input"
-//                 />
-//               </div>
-//               <div className="form-field">
-//                 <label htmlFor="CIplan" className="form-label">Plan</label>
-//                 <input
-//                   id="CIplan"
-//                   type="number"
-//                   name="CIplan"
-//                   value={newDetail.CIplan || ""}
-//                   onChange={(e) =>
-//                     setNewDetail((prev) => ({
-//                       ...prev,
-//                       CIplan: e.target.value,
-//                       xzx: newDetail.CIbaseline ? e.target.value - newDetail.CIbaseline : ""
-//                     }))
-//                   }
-//                   className="form-input"
-//                 />
-//               </div>
-//             </div>
-//           </div>
-//         )}
-  
-//         {/* Common fields */}
-//         <div className="form-grid">
-//           <div className="form-field">
-//             <label htmlFor="name" className="form-label">
-//               የሚከናወን ተግባር
-//             </label>
-//             <input
-//               id="name"
-//               type="text"
-//               name="name"
-//               placeholder="የሚከናወን ተግባር ከዚህ ያስገቡ"
-//               value={newDetail.name}
-//               onChange={handleInputChange}
-//               className="form-input"
-//             />
-//           </div>
-  
-//           <div className="form-field">
-//             <label htmlFor="measurement" className="form-label">
-//               መለኪያ
-//             </label>
-//             <select
-//               id="measurement"
-//               name="measurement"
-//               value={newDetail.measurement}
-//               onChange={handleInputChange}
-//               className="form-select"
-//             >
-//               <option value="">⬇️ Select Measurement</option>
-//               <option value="present">Present</option>
-//               <option value="USD">USD</option>
-//               <option value="ETB">ETB</option>
-//               <option value="performance">Performance</option>
-//               <option value="number">Number</option>
-//             </select>
-//           </div>
-  
-//           <div className="form-field">
-//             <label htmlFor="baseline" className="form-label">
-//               መነሻ
-//             </label>
-//             <input
-//               id="baseline"
-//               type="text"
-//               name="baseline"
-//               placeholder="መነሻ"
-//               value={newDetail.baseline}
-//               onChange={handleInputChange}
-//               className="form-input"
-//             />
-//           </div>
-  
-//           <div className="form-field">
-//             <label htmlFor="plan" className="form-label">
-//               የታቀደው
-//             </label>
-//             <input
-//               id="plan"
-//               type="text"
-//               name="plan"
-//               placeholder="የታቀደው"
-//               value={newDetail.plan}
-//               onChange={handleInputChange}
-//               className="form-input"
-//             />
-//           </div>
-  
-//           <div className="form-field">
-//             <label htmlFor="year" className="form-label">
-//               አመት የሚጀመርበት
-//             </label>
-//             <input
-//               id="year"
-//               type="number"
-//               name="year"
-//               placeholder="አመት የሚጀመርበት"
-//               value={newDetail.year}
-//               onChange={handleInputChange}
-//               className="form-input"
-//             />
-//           </div>
-  
-//           <div className="form-field">
-//             <label htmlFor="month" className="form-label">
-//               ወር
-//             </label>
-//             <input
-//               id="month"
-//               type="number"
-//               name="month"
-//               placeholder="ወር"
-//               value={newDetail.month}
-//               onChange={handleInputChange}
-//               className="form-input"
-//             />
-//           </div>
-  
-//           <div className="form-field">
-//             <label htmlFor="day" className="form-label">
-//               ቀን
-//             </label>
-//             <input
-//               id="day"
-//               type="number"
-//               name="day"
-//               placeholder="ቀን"
-//               value={newDetail.day}
-//               onChange={handleInputChange}
-//               className="form-input"
-//             />
-//           </div>
-  
-//           <div className="form-field">
-//             <label htmlFor="deadline" className="form-label">
-//               ሥራው የሚፈጸምበት ጊዜ
-//             </label>
-//             <input
-//               id="deadline"
-//               type="date"
-//               name="deadline"
-//               placeholder="Deadline"
-//               value={newDetail.deadline}
-//               onChange={handleInputChange}
-//               className="form-input"
-//             />
-//             {deadlineYearError && (
-//               <div className="form-error">{deadlineYearError}</div>
-//             )}
-//           </div>
-  
-//           <div className="form-field full-width">
-//             <label htmlFor="description" className="form-label">
-//               መግለጫ
-//             </label>
-//             <textarea
-//               id="description"
-//               name="description"
-//               placeholder="መግለጫ"
-//               value={newDetail.description}
-//               onChange={handleInputChange}
-//               className="form-textarea"
-//             />
-//           </div>
-//         </div>
-  
-//         <div className="form-button-group">
-//           <button
-//             type="button"
-//             onClick={handleCreateDetail}
-//             disabled={isLoading}
-//             className="btn btn-primary"
-//           >
-//             {isLoading ? "እባኮትን ተጠባበቅ..." : "መዝግብ"}
-//           </button>
-//         </div>
-//       </form>
-//       <div className="form-button-group">
-//         <button
-//           onClick={onBack}
-//           className="btn btn-secondary"
-//         >
-//           ተመለስ
-//         </button>
-//         <button
-//           onClick={handleNext}
-//           disabled={specificObjectiveDetails.length === 0}
-//           className="btn btn-primary"
-//         >
-//           ቀጣይ እንዲሆን
-//         </button>
-//       </div>
-//       {error && <div className="form-error">{error}</div>}
-//       {successMessage && <div className="form-success">{successMessage}</div>}
-//     </div>
-//   );
-// };

@@ -4,7 +4,6 @@ import Axios from "axios";
 import Swal from "sweetalert2";
 import sad from "../../../../assets/img/sad.gif";
 import happy from "../../../../assets/img/happy.gif"; 
-import '../../../../assets/css/planform.css';
 
 const ServiceHeadUpdatePlan = () => {
   const { planId } = useParams();

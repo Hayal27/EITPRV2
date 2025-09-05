@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../../../assets/css/viewplan.css";
 
 const CeoSubmittedViewPlan = () => {
   const [plans, setPlans] = useState([]);

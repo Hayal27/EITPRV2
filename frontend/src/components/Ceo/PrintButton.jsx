@@ -1,6 +1,5 @@
 import React from "react";
 import { printSelectedSections } from "./utils/printUtil";
-import styles from "./StaffDashboard.module.css";
 
 const PrintButton = ({ contentRef }) => {
   const handlePrint = () => {
