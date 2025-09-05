@@ -33,23 +33,32 @@ function Sidebar() {
   const navigate = useNavigate();
   const { state, dispatch } = useAuth();
 
-  // Enhanced responsive detection
+  // Enhanced responsive detection with better breakpoints
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth <= 1024; // Changed from 768 to 1024 for better tablet support
-      const tablet = window.innerWidth <= 768;
+    const checkResponsive = () => {
+      const width = window.innerWidth;
+      const mobile = width <= 640;
+      const tablet = width <= 1024;
+      
       setIsMobile(mobile);
       
-      // Auto-collapse on mobile and tablet
-      if (tablet && !isCollapsed) {
+      // Auto-collapse behavior based on screen size
+      if (mobile) {
+        // On mobile, always start collapsed
         setIsCollapsed(true);
+      } else if (tablet && width <= 768) {
+        // On small tablets, auto-collapse
+        if (!isCollapsed) {
+          setIsCollapsed(true);
+        }
       }
+      // On larger screens, maintain user preference
     };
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [isCollapsed]);
+    checkResponsive();
+    window.addEventListener('resize', checkResponsive);
+    return () => window.removeEventListener('resize', checkResponsive);
+  }, []); // Remove isCollapsed dependency to prevent infinite loops
 
   // Fetch user profile and notifications
   useEffect(() => {
@@ -187,10 +196,17 @@ function Sidebar() {
     setFilteredMenuItems(filtered);
   }, [searchQuery, menuItems]);
 
-  // Enhanced sidebar toggle with animations
-  const handleToggleSidebar = useCallback(() => {
+  // Enhanced sidebar toggle with animations and debugging
+  const handleToggleSidebar = useCallback((e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
+    console.log('Toggle sidebar clicked. Current state:', { isCollapsed, isMobile });
+    
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
+
+    console.log('Setting new collapsed state:', newCollapsedState);
 
     // Close search and submenus when collapsing
     if (newCollapsedState) {
@@ -220,17 +236,22 @@ function Sidebar() {
       }
     }));
 
-    // Save preference
-    localStorage.setItem('sidebar_collapsed', newCollapsedState.toString());
+    // Save preference only for non-mobile
+    if (!isMobile) {
+      localStorage.setItem('sidebar_collapsed', newCollapsedState.toString());
+    }
   }, [isCollapsed, isMobile]);
 
-  // Load saved preferences
+  // Load saved preferences - but override for mobile
   useEffect(() => {
     const savedCollapsed = localStorage.getItem('sidebar_collapsed');
     const savedTheme = localStorage.getItem('sidebar_theme');
     const savedSettings = localStorage.getItem('sidebar_settings');
 
-    if (savedCollapsed !== null) {
+    // On mobile, always start collapsed regardless of saved preference
+    if (isMobile) {
+      setIsCollapsed(true);
+    } else if (savedCollapsed !== null) {
       setIsCollapsed(savedCollapsed === 'true');
     }
     
@@ -241,7 +262,7 @@ function Sidebar() {
     if (savedSettings) {
       setSidebarSettings(JSON.parse(savedSettings));
     }
-  }, []);
+  }, [isMobile]);
 
   // Enhanced submenu toggle
   const toggleSubmenu = useCallback((menuId) => {
@@ -306,7 +327,7 @@ function Sidebar() {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [handleToggleSidebar, isCollapsed, isSearchFocused]);
 
-  // Click outside to close on mobile and handle mobile toggle
+  // Click outside to close on mobile - removed mobile toggle handler since hamburger is removed
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isMobile && !isCollapsed && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
@@ -314,18 +335,10 @@ function Sidebar() {
       }
     };
 
-    const handleMobileToggle = () => {
-      if (isMobile) {
-        setIsCollapsed(!isCollapsed);
-      }
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('toggleMobileSidebar', handleMobileToggle);
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('toggleMobileSidebar', handleMobileToggle);
     };
   }, [isMobile, isCollapsed]);
 
@@ -633,11 +646,15 @@ function Sidebar() {
         <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'} text-sm lg:text-base transition-transform duration-300`}></i>
       </button>
 
-      {/* Professional Sidebar - Positioned below header */}
+      {/* Professional Sidebar - Hide completely on mobile when collapsed */}
       <aside 
         ref={sidebarRef}
         className={`fixed top-16 lg:top-20 left-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] bg-white/95 backdrop-blur-xl border-r border-gray-200 z-40 transition-all duration-500 ease-out shadow-2xl ${
-          isCollapsed ? 'w-16 lg:w-20' : 'w-72 lg:w-80'
+          isMobile && isCollapsed 
+            ? 'w-0 opacity-0 pointer-events-none' 
+            : isCollapsed 
+              ? 'w-16 lg:w-20' 
+              : 'w-72 lg:w-80'
         }`}
       >
         <div className="flex flex-col h-full">

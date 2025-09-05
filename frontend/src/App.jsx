@@ -84,8 +84,8 @@ function App() {
             <Header />
             <Sidebar />
             
-            {/* Main Content with Responsive Layout */}
-            <main className="main-content transition-all duration-300 ease-in-out pt-16 lg:pt-20 ml-0 lg:ml-80">
+            {/* Enhanced Main Content with Professional Responsive Layout */}
+            <main className="main-content transition-all duration-300 ease-in-out pt-14 sm:pt-16 lg:pt-20 ml-0 lg:ml-80 min-h-screen">
               <Routes>
               {/* Profile Route - Available to all authenticated users */}
               <Route path="/ProfilePictureUpload" element={

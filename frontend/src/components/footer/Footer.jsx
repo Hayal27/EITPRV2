@@ -3,21 +3,28 @@ import React, { useState, useEffect } from 'react';
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [screenSize, setScreenSize] = useState('desktop');
 
-  // Listen for sidebar toggle events
+  // Enhanced responsive detection and sidebar state management
   useEffect(() => {
     const handleSidebarToggle = (event) => {
       setSidebarCollapsed(event.detail.isCollapsed);
     };
 
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
+    // Enhanced screen size detection
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      if (width <= 640) {
+        setScreenSize('mobile');
+      } else if (width <= 1024) {
+        setScreenSize('tablet');
+      } else {
+        setScreenSize('desktop');
+      }
     };
 
-    // Initial check
-    checkMobile();
+    // Initial checks
+    checkScreenSize();
     
     // Get initial sidebar state from localStorage
     const savedCollapsed = localStorage.getItem('sidebar_collapsed');
@@ -27,20 +34,25 @@ const Footer = () => {
 
     // Add event listeners
     window.addEventListener('sidebarToggle', handleSidebarToggle);
-    window.addEventListener('resize', checkMobile);
+    window.addEventListener('resize', checkScreenSize);
 
     return () => {
       window.removeEventListener('sidebarToggle', handleSidebarToggle);
-      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('resize', checkScreenSize);
     };
   }, []);
 
-  // Calculate margin based on sidebar state
+  // Enhanced margin calculation based on screen size and sidebar state
   const getFooterMargin = () => {
-    if (isMobile) {
-      return '0px'; // No margin on mobile
+    switch (screenSize) {
+      case 'mobile':
+        return '0px'; // No margin on mobile
+      case 'tablet':
+        return sidebarCollapsed ? '80px' : '0px'; // Collapsed sidebar or no margin on tablet
+      case 'desktop':
+      default:
+        return sidebarCollapsed ? '80px' : '320px'; // Match sidebar widths on desktop
     }
-    return sidebarCollapsed ? '80px' : '320px'; // Match sidebar widths
   };
 
   return (
@@ -53,100 +65,103 @@ const Footer = () => {
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         
-        {/* Main Footer Content */}
-        <div className="py-8 lg:py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Enhanced Responsive Main Footer Content */}
+        <div className="py-6 sm:py-8 lg:py-12">
+          {/* Mobile-First Grid Layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             
-            {/* Company Info */}
-            <div className="lg:col-span-2">
+            {/* Company Info - Enhanced for all screen sizes */}
+            <div className="sm:col-span-2 lg:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <i className="bi bi-shield-check text-white text-lg"></i>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i className="bi bi-shield-check text-white text-sm sm:text-lg"></i>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent truncate">
                     ITPC Admin System
                   </h3>
-                  <p className="text-sm text-slate-500">Plan & Reporting Platform</p>
+                  <p className="text-xs sm:text-sm text-slate-500 truncate">Plan & Reporting Platform</p>
                 </div>
               </div>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4 max-w-md">
+              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4 max-w-md">
                 Ethiopian IT Park Corporate comprehensive management system for planning, 
                 reporting, and organizational oversight. Streamlining operations with 
                 modern technology solutions.
               </p>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-sm text-slate-500">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              
+              {/* Status Indicators - Responsive */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <div className="flex items-center space-x-2 text-xs sm:text-sm text-slate-500">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
                   <span>System Online</span>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-slate-500">
-                  <i className="bi bi-shield-check text-green-500"></i>
+                <div className="flex items-center space-x-2 text-xs sm:text-sm text-slate-500">
+                  <i className="bi bi-shield-check text-green-500 flex-shrink-0"></i>
                   <span>Secure Connection</span>
                 </div>
               </div>
             </div>
 
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-4">
+            {/* Quick Links - Enhanced for mobile */}
+            <div className="sm:col-span-1">
+              <h4 className="text-xs sm:text-sm font-semibold text-slate-800 uppercase tracking-wider mb-3 sm:mb-4">
                 Quick Links
               </h4>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 <li>
-                  <a href="/dashboard" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-speedometer2 text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/dashboard" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-speedometer2 text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>Dashboard</span>
                   </a>
                 </li>
                 <li>
-                  <a href="/reports" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-file-earmark-text text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/reports" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-file-earmark-text text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>Reports</span>
                   </a>
                 </li>
                 <li>
-                  <a href="/settings" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-gear text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/settings" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-gear text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>Settings</span>
                   </a>
                 </li>
                 <li>
-                  <a href="/help" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-question-circle text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/help" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-question-circle text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>Help Center</span>
                   </a>
                 </li>
               </ul>
             </div>
 
-            {/* Support */}
-            <div>
-              <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-wider mb-4">
+            {/* Support - Enhanced for mobile */}
+            <div className="sm:col-span-1">
+              <h4 className="text-xs sm:text-sm font-semibold text-slate-800 uppercase tracking-wider mb-3 sm:mb-4">
                 Support
               </h4>
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 <li>
-                  <a href="/docs" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-book text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/docs" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-book text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>Documentation</span>
                   </a>
                 </li>
                 <li>
-                  <a href="/contact" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-envelope text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/contact" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-envelope text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>Contact Support</span>
                   </a>
                 </li>
                 <li>
-                  <a href="/tickets" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-ticket-perforated text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/tickets" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-ticket-perforated text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>Support Tickets</span>
                   </a>
                 </li>
                 <li>
-                  <a href="/status" className="text-slate-600 hover:text-slate-800 text-sm transition-colors duration-200 flex items-center space-x-2 group">
-                    <i className="bi bi-activity text-xs group-hover:text-blue-500 transition-colors duration-200"></i>
+                  <a href="/status" className="text-slate-600 hover:text-slate-800 text-xs sm:text-sm transition-colors duration-200 flex items-center space-x-2 group">
+                    <i className="bi bi-activity text-xs group-hover:text-blue-500 transition-colors duration-200 flex-shrink-0"></i>
                     <span>System Status</span>
                   </a>
                 </li>
@@ -155,42 +170,43 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Divider */}
+        {/* Responsive Divider */}
         <div className="border-t border-slate-200/60"></div>
 
-        {/* Bottom Footer */}
-        <div className="py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+        {/* Enhanced Bottom Footer - Mobile-First */}
+        <div className="py-4 sm:py-6">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             
-            {/* Copyright */}
-            <div className="flex items-center space-x-4">
-              <p className="text-sm text-slate-600">
+            {/* Copyright - Responsive */}
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-sm text-slate-600">
                 © {currentYear} <span className="font-semibold text-slate-800">Ethiopian IT Park Corporate</span>. 
-                All rights reserved.
+                <span className="block sm:inline mt-1 sm:mt-0">All rights reserved.</span>
               </p>
             </div>
 
-            {/* Version & Status */}
-            <div className="flex items-center space-x-6">
+            {/* Version & Status - Enhanced for mobile */}
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 lg:space-x-6">
               <div className="flex items-center space-x-2">
                 <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                   v2.0.1
                 </span>
-                <span className="text-xs text-slate-500">Professional Edition</span>
+                <span className="text-xs text-slate-500 hidden sm:inline">Professional Edition</span>
               </div>
               
-              <div className="flex items-center space-x-4 text-xs text-slate-500">
+              <div className="flex items-center space-x-2 sm:space-x-4 text-xs text-slate-500">
                 <span className="flex items-center space-x-1">
-                  <i className="bi bi-clock text-xs"></i>
-                  <span>Last updated: {new Date().toLocaleDateString()}</span>
+                  <i className="bi bi-clock text-xs flex-shrink-0"></i>
+                  <span className="hidden sm:inline">Last updated:</span>
+                  <span>{new Date().toLocaleDateString()}</span>
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Developer Credit (Optional) */}
-        <div className="border-t border-slate-200/60 py-4">
+        {/* Enhanced Developer Credit - Mobile-Friendly */}
+        <div className="border-t border-slate-200/60 py-3 sm:py-4">
           <div className="text-center">
             <p className="text-xs text-slate-400">
               Developed with <i className="bi bi-heart-fill text-red-400 mx-1"></i> by 

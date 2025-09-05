@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
 import { initializeCeoSidebarIntegration, getCurrentSidebarState } from './CeoSidebarUtils';
-import './CeoLayoutExample.css';
 
 /**
  * CEO Layout Example Component
