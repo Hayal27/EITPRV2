@@ -11,6 +11,7 @@ const CeoSubmittedViewPlan = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [userInfo, setUserInfo] = useState(null);
   const token = localStorage.getItem("token");
 
   // Sidebar state management
@@ -75,7 +76,40 @@ const CeoSubmittedViewPlan = () => {
 
   useEffect(() => {
     fetchPlans();
+    fetchUserInfo();
   }, []);
+
+  // Fetch user information from token or localStorage
+  const fetchUserInfo = async () => {
+    try {
+      // Try to get user info from localStorage first
+      const storedUserInfo = localStorage.getItem("userInfo");
+      if (storedUserInfo) {
+        setUserInfo(JSON.parse(storedUserInfo));
+        return;
+      }
+
+      // If not in localStorage, try to fetch from API
+      const response = await axios.get("http://localhost:5000/api/user/profile", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setUserInfo(response.data.user);
+        // Store in localStorage for future use
+        localStorage.setItem("userInfo", JSON.stringify(response.data.user));
+      }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      // Fallback: try to extract user info from token or use default
+      const defaultUserInfo = {
+        name: localStorage.getItem("userName") || "CEO",
+        email: localStorage.getItem("userEmail") || "",
+        role: "CEO"
+      };
+      setUserInfo(defaultUserInfo);
+    }
+  };
 
   const fetchPlans = async () => {
     try {
@@ -102,9 +136,21 @@ const CeoSubmittedViewPlan = () => {
 
   const handleApproveDecline = async (planId, action, actionComment = comment) => {
     try {
+      // Prepare the request data with comment writer information
+      const requestData = {
+        plan_id: planId,
+        status: action,
+        comment: actionComment,
+        comment_writer: userInfo?.name || userInfo?.username || userInfo?.email || "CEO",
+        comment_writer_role: userInfo?.role || "CEO",
+        comment_date: new Date().toISOString()
+      };
+
+      console.log("Sending request with data:", requestData); // Debug log
+
       const response = await axios.put(
         "http://localhost:5000/api/supervisor/plans/approveceo",
-        { plan_id: planId, status: action, comment: actionComment },
+        requestData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
